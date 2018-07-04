@@ -6,9 +6,6 @@ import (
 	"bufio"
 	"io"
 
-	"github.com/opencontainers/runtime-spec/specs-go"
-
-	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -48,30 +45,6 @@ func checkArgs(context *cli.Context, expected, checkType int) error {
 		return err
 	}
 	return nil
-}
-
-// fatal prints the error's details if it is a libcontainer specific error type
-// then exits the program with an exit status of 1.
-func fatal(err error) {
-	// make sure the error is written to the logger
-	logrus.Error(err)
-	fmt.Fprintln(os.Stderr, err)
-	os.Exit(1)
-}
-
-// setupSpec performs initial setup based on the cli.Context for the container
-func setupSpec(context *cli.Context) (*specs.Spec, error) {
-	bundle := context.String("bundle")
-	if bundle != "" {
-		if err := os.Chdir(bundle); err != nil {
-			return nil, err
-		}
-	}
-	spec, err := loadSpec(specConfig)
-	if err != nil {
-		return nil, err
-	}
-	return spec, nil
 }
 
 

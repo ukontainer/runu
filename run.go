@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -24,45 +23,73 @@ var runCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if err := checkArgs(context, 2, exactArgs); err != nil {
+		if err := checkArgs(context, 1, exactArgs); err != nil {
 			fmt.Printf("checkArgs err\n")
 			return err
 		}
-		spec, err := setupSpec(context)
-		if err != nil {
-			fmt.Printf("setupSepc err\n")
-			return err
-		}
 
-		fmt.Printf("exec %s\n", spec.Process.Args)
-		rootfs,_ := filepath.Abs(spec.Root.Path)
-
-		// call rexec
-		os.Setenv("PATH", "${PATH}:" + rootfs + "/sbin:" + rootfs + "/bin")
-		cmd := exec.Command("rexec", context.Args()...)
-		cmd.Dir = spec.Process.Cwd
-		cmd.Env = append(os.Environ(),
-			"RUMP_VERBOSE=1",
-		)
-
-		stdout, err := cmd.StdoutPipe()
-		if err != nil {
-			log.Fatal(err)
-		}
-		if err := cmd.Start(); err != nil {
-			log.Fatal(err)
-		}
-
-		go printOutputWithHeader(stdout, true)
-
-		if err := cmd.Wait(); err != nil {
-			log.Fatal(err)
-		}
-
-		return err
+		return cmdStartUnikernel(context)
 	},
 }
 
+func printFile(path string, info os.FileInfo, err error) error {
+    if err != nil {
+        fmt.Print(err)
+        return nil
+    }
+    fmt.Println(path)
+    fmt.Printf("mode: %o\n", info.Mode)
+    return nil
+}
+
+
+func cmdStartUnikernel(context *cli.Context) error {
+	spec, err := setupSpec(context)
+	if err != nil {
+		fmt.Printf("setupSepc err\n")
+		return err
+	}
+
+	rootfs,_ := filepath.Abs(spec.Root.Path)
+//	fmt.Printf("exec %s at root %s cwd %s\n", spec.Process.Args, rootfs, spec.Process.Cwd)
+//	fmt.Printf("context ==> %s\n", context)
+//	fmt.Printf("spec ==> %s\n", spec)
+//	filepath.Walk(rootfs, printFile)
+
+	// call rexec
+	saveState("running", context)
+	os.Setenv("PATH", rootfs + ":" + rootfs + "/sbin:" + rootfs + "/bin:${PATH}")
+	cmd := exec.Command("rexec", spec.Process.Args...)
+	cmd.Dir = rootfs
+	cmd.Env = append(os.Environ(),
+		"RUMP_VERBOSE=1",
+		"SUDO_UUID=1000",
+	)
+
+
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		panic(err)
+	}
+	stderr, err := cmd.StderrPipe()
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cmd.Start(); err != nil {
+		panic(err)
+	}
+
+
+	go printOutputWithHeader(stdout, true)
+	go printOutputWithHeader(stderr, true)
+
+	if err := cmd.Wait(); err != nil {
+		panic(err)
+	}
+
+	return err
+}
 
 // loadSpec loads the specification from the provided path.
 func loadSpec(cPath string) (spec *specs.Spec, err error) {

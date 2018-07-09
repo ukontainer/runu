@@ -13,6 +13,7 @@ import (
 
 const (
 	specConfig = "config.json"
+	stateJSON = "state.json"
 	usage = "runu run [ -b bundle ] <container-id>"
 )
 
@@ -32,7 +33,7 @@ func main() {
 		},
 		cli.StringFlag{
 			Name:  "log",
-			Value: "/dev/null",
+			Value: "/tmp/runu.log",
 			Usage: "set the log file path where internal debug information is written",
 		},
 		cli.StringFlag{
@@ -40,9 +41,20 @@ func main() {
 			Value: "text",
 			Usage: "set the format used by logs ('text' (default), or 'json')",
 		},
+		cli.StringFlag{
+			Name:  "root",
+			Value: "/run/runu",
+			Usage: "root directory for storage of container state (this should be located in tmpfs)",
+		},
 	}
 	app.Commands = []cli.Command{
+		createCommand,
 		runCommand,
+		// XXX: unimplemented
+		startCommand,
+		stateCommand,
+		killCommand,
+		deleteCommand,
 	}
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
@@ -53,6 +65,7 @@ func main() {
 				os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC,
 				0666)
 			if err != nil {
+				fmt.Printf("%s\n", err)
 				return err
 			}
 			logrus.SetOutput(f)
@@ -69,8 +82,11 @@ func main() {
 		return nil
 	}
 
+	logrus.Printf("Runu called with args: %v\n", os.Args)
 	if err := app.Run(os.Args); err != nil {
+		fmt.Printf("%s\n", err)
 		panic(err)
 	}
+	logrus.Printf("Runu main return\n")
 }
 

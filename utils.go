@@ -7,6 +7,7 @@ import (
 	"io"
 
 	"github.com/urfave/cli"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -53,6 +54,7 @@ func printOutputWithHeader(r io.Reader, verbose bool) {
 	for scanner.Scan() {
 		if verbose {
 			fmt.Printf("%s\n", scanner.Text())
+			logrus.Info("%s\n", scanner.Text())
 		}
 	}
 }

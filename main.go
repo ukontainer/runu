@@ -56,6 +56,7 @@ func main() {
 		killCommand,
 		deleteCommand,
 	}
+
 	app.Before = func(context *cli.Context) error {
 		if context.GlobalBool("debug") {
 			logrus.SetLevel(logrus.DebugLevel)
@@ -79,14 +80,16 @@ func main() {
 			return fmt.Errorf("unknown log-format %q",
 				context.GlobalString("log-format"))
 		}
+
+		logrus.Printf("Runu called with args: %v\n", os.Args)
 		return nil
 	}
 
-	logrus.Printf("Runu called with args: %v\n", os.Args)
 	if err := app.Run(os.Args); err != nil {
 		fmt.Printf("%s\n", err)
 		panic(err)
 	}
+
 	logrus.Printf("Runu main return\n")
 }
 

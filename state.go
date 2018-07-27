@@ -7,10 +7,11 @@ import (
 	"encoding/json"
 	"path/filepath"
 	"github.com/urfave/cli"
+	"github.com/sirupsen/logrus"
 	"github.com/opencontainers/runtime-spec/specs-go"
 )
 
-func saveState(status string, context *cli.Context) error {
+func saveState(status string, Pid int, context *cli.Context) error {
 	spec, err := setupSpec(context)
 	if err != nil {
 		fmt.Printf("setupSepc err\n")
@@ -18,14 +19,16 @@ func saveState(status string, context *cli.Context) error {
 	}
 
 	rootfs,_ := filepath.Abs(spec.Root.Path)
-	stateFile := filepath.Join(rootfs, "", stateJSON)
+	stateFile := filepath.Join("./", "", stateJSON)
 	cs := &specs.State {
 		Version: spec.Version,
-		ID: "1",
+		ID: context.Args().Get(0),
 		Status: status,
-		Pid: 1,
 		Bundle: rootfs,
-	 }
+	}
+	if Pid != -1 {
+		cs.Pid = Pid
+	}
 	stateData, _ := json.MarshalIndent(cs, "", "\t")
 
 	if err := ioutil.WriteFile(stateFile, stateData, 0666); err != nil {
@@ -39,12 +42,11 @@ func saveState(status string, context *cli.Context) error {
 var stateCommand = cli.Command{
 	Name:  "state",
 	Action: func(context *cli.Context) error {
-		spec, _ := setupSpec(context)
-		rootfs,_ := filepath.Abs(spec.Root.Path)
-		stateFile := filepath.Join(rootfs, "", stateJSON)
+		stateFile := filepath.Join("./", "", stateJSON)
 		stateData, _ := ioutil.ReadFile(stateFile)
 
 		os.Stdout.Write(stateData)
+		logrus.Printf("stat = %s\n", stateData)
 		return nil
 	},
 }

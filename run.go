@@ -5,10 +5,9 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"encoding/json"
 
 	"github.com/urfave/cli"
-	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
 )
 
 // default action is to start a container
@@ -42,7 +41,6 @@ func printFile(path string, info os.FileInfo, err error) error {
     return nil
 }
 
-
 func cmdStartUnikernel(context *cli.Context) error {
 	spec, err := setupSpec(context)
 	if err != nil {
@@ -51,13 +49,11 @@ func cmdStartUnikernel(context *cli.Context) error {
 	}
 
 	rootfs,_ := filepath.Abs(spec.Root.Path)
-//	fmt.Printf("exec %s at root %s cwd %s\n", spec.Process.Args, rootfs, spec.Process.Cwd)
-//	fmt.Printf("context ==> %s\n", context)
-//	fmt.Printf("spec ==> %s\n", spec)
-//	filepath.Walk(rootfs, printFile)
+//	logrus.Printf("exec %s at root %s cwd %s\n", spec.Process.Args, rootfs, spec.Process.Cwd)
+//	logrus.Printf("context ==> %s\n", context)
+//	logrus.Printf("spec ==> %s\n", spec)
 
 	// call rexec
-	saveState("running", context)
 	os.Setenv("PATH", rootfs + ":" + rootfs + "/sbin:" + rootfs + "/bin:${PATH}")
 	cmd := exec.Command("rexec", spec.Process.Args...)
 	cmd.Dir = rootfs
@@ -65,7 +61,6 @@ func cmdStartUnikernel(context *cli.Context) error {
 		"RUMP_VERBOSE=1",
 		"SUDO_UUID=1000",
 	)
-
 
 	stdout, err := cmd.StdoutPipe()
 	if err != nil {
@@ -80,45 +75,16 @@ func cmdStartUnikernel(context *cli.Context) error {
 		panic(err)
 	}
 
+	saveState("running", cmd.Process.Pid, context)
 
 	go printOutputWithHeader(stdout, true)
 	go printOutputWithHeader(stderr, true)
 
 	if err := cmd.Wait(); err != nil {
+		logrus.Printf("%s\n", err)
 		panic(err)
 	}
 
-	return err
-}
-
-// loadSpec loads the specification from the provided path.
-func loadSpec(cPath string) (spec *specs.Spec, err error) {
-	cf, err := os.Open(cPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("JSON specification file %s not found", cPath)
-		}
-		return nil, err
-	}
-	defer cf.Close()
-
-	if err = json.NewDecoder(cf).Decode(&spec); err != nil {
-		return nil, err
-	}
-	return spec, nil
-}
-
-// setupSpec performs initial setup based on the cli.Context for the container
-func setupSpec(context *cli.Context) (*specs.Spec, error) {
-	bundle := context.String("bundle")
-	if bundle != "" {
-		if err := os.Chdir(bundle); err != nil {
-			return nil, err
-		}
-	}
-	spec, err := loadSpec(specConfig)
-	if err != nil {
-		return nil, err
-	}
-	return spec, nil
+	saveState("stopped", cmd.Process.Pid, context)
+	return nil
 }

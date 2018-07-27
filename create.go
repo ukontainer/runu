@@ -27,10 +27,10 @@ var createCommand = cli.Command{
 				fmt.Printf("ERR: %s\n", err)
 				return err
 			}
-			_, err = fmt.Fprintf(f, "%d", 1 /*cmd.Process.Pid*/)
+			_, err = fmt.Fprintf(f, "%d", os.Getppid())
 			f.Close()
 		}
-		saveState("created", context)
+		saveState("created", -1, context)
 
 		return nil
 	},

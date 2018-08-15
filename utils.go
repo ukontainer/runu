@@ -182,6 +182,8 @@ func startUnikernel(context *cli.Context) error {
 	cmd.Dir = rootfs
 	cmd.Env = append(os.Environ(),
 		"RUMP_VERBOSE=1",
+		"PYTHONHOME=/python",
+		"HOME=/",
 		"SUDO_UUID=1000",
 	)
 

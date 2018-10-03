@@ -8,6 +8,7 @@ import (
 	"bufio"
 	"io"
 	"encoding/json"
+	_ "time"
 
 	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runtime-spec/specs-go"
@@ -185,6 +186,8 @@ func startUnikernel(context *cli.Context) error {
 		"PYTHONHOME=/python",
 		"HOME=/",
 		"SUDO_UUID=1000",
+		"LKL_OFFLOAD=1",
+		"LKL_BOOT_CMDLINE=mem=1G",
 	)
 
 	stdout, err := cmd.StdoutPipe()

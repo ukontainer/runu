@@ -9,6 +9,7 @@ import (
 // default action is to start a container
 var runCommand = cli.Command{
 	Name:  "run",
+	ArgsUsage: `<container-id>`,
 	Usage: "create and run a container",
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -18,10 +19,10 @@ var runCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		if err := checkArgs(context, 1, exactArgs); err != nil {
-			fmt.Printf("checkArgs err\n")
-			return err
-		}
+                args := context.Args()
+                if args.Present() == false {
+                        return fmt.Errorf("Missing container ID")
+                }
 
 		return startUnikernel(context)
 	},

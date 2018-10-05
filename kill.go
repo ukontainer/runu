@@ -1,22 +1,40 @@
 package main
 
 import (
-       "os"
-       "github.com/urfave/cli"
+	"os"
+	"fmt"
+	"io/ioutil"
+	"strconv"
+	"syscall"
+	"path/filepath"
+	"github.com/urfave/cli"
 )
 
 var killCommand = cli.Command{
 	Name:  "kill",
+	ArgsUsage: `<container-id>`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "all",
 		},
 	},
 	Action: func(context *cli.Context) error {
-		saveState("stopped", -1, context)
+                args := context.Args()
+                if args.Present() == false {
+                        return fmt.Errorf("Missing container ID")
+                }
 
-		proc, _ := os.FindProcess(os.Getppid())
-		proc.Signal(os.Interrupt)
+		root := context.GlobalString("root")
+		name := context.Args().Get(0)
+		signal, _ := strconv.Atoi(context.Args().Get(1))
+
+		pidFile := filepath.Join(root, name, "init.pid")
+		pid, _ := ioutil.ReadFile(pidFile)
+		pid_i, _ := strconv.Atoi(string(pid))
+
+		proc, _ := os.FindProcess(pid_i)
+		proc.Signal(syscall.Signal(signal))
+		saveState("stopped", name, context)
 		return nil
 	},
 }

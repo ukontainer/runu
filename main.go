@@ -5,8 +5,8 @@ import (
 	"os"
 	"strings"
 
+	goruntime "runtime"
 	"github.com/opencontainers/runtime-spec/specs-go"
-
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
@@ -15,6 +15,7 @@ const (
 	specConfig = "config.json"
 	stateJSON = "state.json"
 	usage = "runu run [ -b bundle ] <container-id>"
+	arch = goruntime.GOARCH
 )
 
 func main() {
@@ -58,9 +59,6 @@ func main() {
 	}
 
 	app.Before = func(context *cli.Context) error {
-		if context.GlobalBool("debug") {
-			logrus.SetLevel(logrus.DebugLevel)
-		}
 		if path := context.GlobalString("log"); path != "" {
 			f, err := os.OpenFile(path,
 				os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC,
@@ -70,6 +68,10 @@ func main() {
 				return err
 			}
 			logrus.SetOutput(f)
+		}
+		if context.GlobalBool("debug") {
+			logrus.SetLevel(logrus.DebugLevel)
+			logrus.SetOutput(os.Stdout)
 		}
 		switch context.GlobalString("log-format") {
 		case "text":
@@ -81,13 +83,16 @@ func main() {
 				context.GlobalString("log-format"))
 		}
 
+		err := handleSystemLog("","")
+		if err != nil {
+			return err
+		}
 		logrus.Printf("Runu called with args: %v\n", os.Args)
 		return nil
 	}
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Printf("%s\n", err)
-		panic(err)
 	}
 
 	logrus.Printf("Runu main return\n")

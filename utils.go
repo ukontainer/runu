@@ -7,11 +7,11 @@ import (
 	"path/filepath"
 	"bufio"
 	"io"
-	"encoding/json"
+	"syscall"
 	_ "time"
 
-	"github.com/opencontainers/runc/libcontainer"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/opencontainers/runc/libcontainer"
 	"github.com/urfave/cli"
 	"github.com/sirupsen/logrus"
 )
@@ -63,40 +63,6 @@ func printOutputWithHeader(r io.Reader, verbose bool) {
 			logrus.Info("%s\n", scanner.Text())
 		}
 	}
-}
-
-// loadSpec loads the specification from the provided path.
-func loadSpec(cPath string) (spec *specs.Spec, err error) {
-	cf, err := os.Open(cPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return nil, fmt.Errorf("JSON specification file %s not found", cPath)
-		}
-		return nil, err
-	}
-	defer cf.Close()
-
-	if err = json.NewDecoder(cf).Decode(&spec); err != nil {
-		return nil, err
-	}
-	return spec, nil
-}
-
-// setupSpec performs initial setup based on the cli.Context for the container
-func setupSpec(context *cli.Context) (*specs.Spec, error) {
-	bundle := context.String("bundle")
-	if bundle != "" {
-		if err := os.Chdir(bundle); err != nil {
-			fmt.Printf("error: dir not found (%s)\n", bundle)
-			return nil, err
-		}
-	}
-	spec, err := loadSpec(specConfig)
-	if err != nil {
-		fmt.Printf("loadSpec err (%s)\n", err)
-		return nil, err
-	}
-	return spec, nil
 }
 
 // newProcess returns a new libcontainer Process with the arguments from the
@@ -160,6 +126,7 @@ func startUnikernel(context *cli.Context) error {
 	}
 */
 
+	name := context.Args().First()
 	spec, err := setupSpec(context)
 	if err != nil {
 		logrus.Printf("setupSepc err\n")
@@ -206,7 +173,10 @@ func startUnikernel(context *cli.Context) error {
 
 	// write pid file
 	if pidf := context.String("pid-file"); pidf != "" {
-		f, err := os.OpenFile(pidf, os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
+		root := context.GlobalString("root")
+		container := context.Args().First()
+		f, err := os.OpenFile(filepath.Join(root, container, pidf),
+			os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
 		if err != nil {
 			fmt.Printf("ERR: %s\n", err)
 			return err
@@ -215,16 +185,19 @@ func startUnikernel(context *cli.Context) error {
 		f.Close()
 	}
 
-	saveState("running", cmd.Process.Pid, context)
+	saveState("running", name, context)
 
 	go printOutputWithHeader(stdout, true)
 	go printOutputWithHeader(stderr, true)
 
 	if err := cmd.Wait(); err != nil {
+		waitstatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
 		fmt.Printf("%s\n", err)
-		panic(err)
+		if !waitstatus.Signaled() {
+			panic(err)
+		}
 	}
 
-	saveState("stopped", cmd.Process.Pid, context)
+	saveState("stopped", name, context)
 	return nil
 }

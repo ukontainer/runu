@@ -1,13 +1,13 @@
 package main
 
 import (
-	"os"
-	"path/filepath"
+	"fmt"
 	"github.com/urfave/cli"
 )
 
 var deleteCommand = cli.Command{
 	Name:  "delete",
+	ArgsUsage: `<container-id>`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
 			Name:  "force, f",
@@ -15,8 +15,12 @@ var deleteCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-		stateFile := filepath.Join("./", "", stateJSON)
-		os.Remove(stateFile)
-		return nil
+                args := context.Args()
+                if args.Present() == false {
+                        return fmt.Errorf("Missing container ID")
+                }
+
+		container := context.Args().First()
+		return deleteContainer(context.GlobalString("root"), container)
 	},
 }

@@ -21,6 +21,7 @@ script:
   - go get github.com/opencontainers/runtime-spec/specs-go
   - go get github.com/urfave/cli
   - go get github.com/sirupsen/logrus
+  - go get github.com/opencontainers/runc/libcontainer/specconv
   - make
   - bash test/standalone-test.sh
 

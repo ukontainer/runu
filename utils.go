@@ -54,7 +54,7 @@ func prepareUkontainer(context *cli.Context) error {
 	name := context.Args().Get(0)
 	spec, err := setupSpec(context)
 	if err != nil {
-		logrus.Printf("setupSepc err\n")
+		logrus.Warn("setupSepc err\n")
 		return err
 	}
 
@@ -93,14 +93,14 @@ func prepareUkontainer(context *cli.Context) error {
 	}
 	// 1) pid file for runu itself
 	root := context.GlobalString("root")
-	pidf := filepath.Join(root, name, "runu.pid")
+	pidf := filepath.Join(root, name, pid_file_priv)
 	f, err := os.OpenFile(pidf,
 		os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
 
 	_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 	f.Close()
 
-	logrus.Printf("PID=%d to pid file %s",
+	logrus.Debug("PID=%d to pid file %s",
 		cmd.Process.Pid, pidf)
 
 	proc, _ := os.FindProcess(cmd.Process.Pid)

@@ -28,7 +28,7 @@ var killCommand = cli.Command{
 		name := context.Args().Get(0)
 		signal, _ := strconv.Atoi(context.Args().Get(1))
 
-		pidFile := filepath.Join(root, name, "runu.pid")
+		pidFile := filepath.Join(root, name, pid_file_priv)
 		pid, _ := ioutil.ReadFile(pidFile)
 		pid_i, _ := strconv.Atoi(string(pid))
 

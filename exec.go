@@ -12,7 +12,7 @@ var execCommand = cli.Command{
 	Flags: []cli.Flag{
 	},
 	Action: func(context *cli.Context) error {
-		logrus.Printf("exec called\n")
+		logrus.Debug("exec called\n")
 		return nil
 	},
 	SkipArgReorder: true,

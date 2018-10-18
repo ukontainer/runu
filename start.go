@@ -31,7 +31,7 @@ var startCommand = cli.Command{
 
 func resumeUkontainer(context *cli.Context, container string) error {
 	root := context.GlobalString("root")
-	pidFile := filepath.Join(root, container, "runu.pid")
+	pidFile := filepath.Join(root, container, pid_file_priv)
 	pid, _ := ioutil.ReadFile(pidFile)
 	pid_i, _ := strconv.Atoi(string(pid))
 

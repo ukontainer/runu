@@ -16,6 +16,7 @@ const (
 	stateJSON = "state.json"
 	usage = "runu run [ -b bundle ] <container-id>"
 	arch = goruntime.GOARCH
+	pid_file_priv = "runu.pid"
 )
 
 func main() {
@@ -74,6 +75,9 @@ func main() {
 			logrus.SetLevel(logrus.DebugLevel)
 			logrus.SetOutput(os.Stdout)
 		}
+		if os.Getenv("DEBUG") != "" {
+			logrus.SetLevel(logrus.DebugLevel)
+		}
 		switch context.GlobalString("log-format") {
 		case "text":
 			// retain logrus's default.
@@ -88,7 +92,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		logrus.Printf("Runu called with args: %v\n", os.Args)
+		logrus.Debug("Runu called with args: %v\n", os.Args)
 		return nil
 	}
 

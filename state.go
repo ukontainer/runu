@@ -26,7 +26,7 @@ var stateCommand = cli.Command{
 		stateData, _ := ioutil.ReadFile(stateFile)
 
 		os.Stdout.Write(stateData)
-		logrus.Print(string(stateData))
+		logrus.Debug(string(stateData))
 		return nil
 	},
 }
@@ -69,7 +69,7 @@ func createContainer(container, bundle, stateRoot string, spec *specs.Spec) erro
 	}
 	err = os.MkdirAll(stateDir, 0755)
 	if err != nil {
-		logrus.Infof("%s", err.Error())
+		logrus.Warn("%s", err.Error())
 		return err
 	}
 	defer func() {

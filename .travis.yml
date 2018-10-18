@@ -1,0 +1,12 @@
+sudo: required
+dist: trusty
+language: generic
+cache:
+  directories:
+    - $HOME/.ccache
+
+os:
+  - osx
+  - linux
+
+script: make

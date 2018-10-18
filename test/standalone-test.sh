@@ -2,8 +2,16 @@
 
 mkdir -p /tmp/bundle/rootfs
 mkdir -p /tmp/runu-root
-docker export $(docker create thehajime/runu-base:$TRAVIS_OS_NAME sh) \
-    | tar -C /tmp/bundle/rootfs -xvf -
+
+# get script from moby
+curl -O https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh
+bash download-frozen-image-v2.sh . thehajime/runu-base:$TRAVIS_OS_NAME
+
+# extract images from layers
+for layer in `find ./ -name layer.tar`
+do
+ tar xvfz $layer -C /tmp/bundle/rootfs
+done
 
 rm -f config.json
 ./runu spec

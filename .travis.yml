@@ -15,7 +15,7 @@ matrix:
         - sudo apt-get install jq
     - os: osx
       before_install:
-        - brew install jq docker
+        - brew install jq
 
 script: 
   - go get github.com/opencontainers/runtime-spec/specs-go

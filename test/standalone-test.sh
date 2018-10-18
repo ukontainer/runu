@@ -42,5 +42,5 @@ run_test
 cat config.json | jq '.process.args |=["python", "imgs/python.iso", "imgs/python.img", "--", "-c", "print(\"hello world\")"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
-run_test
+RUMP_VERBOSE=1 PYTHONHOME=/python run_test
 

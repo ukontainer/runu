@@ -15,11 +15,12 @@ matrix:
         - sudo apt-get install jq
     - os: osx
       before_install:
-        - brew install jq coreutils
+        - mkdir -p ~/.local/bin
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
-script: 
+script:
   - go get github.com/opencontainers/runtime-spec/specs-go
   - go get github.com/urfave/cli
   - go get github.com/sirupsen/logrus

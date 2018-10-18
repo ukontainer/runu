@@ -26,7 +26,7 @@ var runCommand = cli.Command{
 
 		// XXX: create + start
 		container := context.Args().Get(0)
-		prepareUkontainer(context)
+		cmdCreateUkon(context, false)
 		return resumeUkontainer(context, container)
 
 	},

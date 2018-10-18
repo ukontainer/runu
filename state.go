@@ -67,7 +67,7 @@ func createContainer(container, bundle, stateRoot string, spec *specs.Spec) erro
 		logrus.Errorf("Container %s exists", container)
 		return fmt.Errorf("Container %s exists", container)
 	}
-	err = os.MkdirAll(stateDir, 0644)
+	err = os.MkdirAll(stateDir, 0755)
 	if err != nil {
 		logrus.Infof("%s", err.Error())
 		return err

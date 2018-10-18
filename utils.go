@@ -51,7 +51,7 @@ func checkArgs(context *cli.Context, expected, checkType int) error {
 
 
 func prepareUkontainer(context *cli.Context) error {
-	name := context.Args().First()
+	name := context.Args().Get(0)
 	spec, err := setupSpec(context)
 	if err != nil {
 		logrus.Printf("setupSepc err\n")
@@ -90,18 +90,18 @@ func prepareUkontainer(context *cli.Context) error {
 		_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 		f.Close()
 
-		// 1) pid file for runu itself
-		root := context.GlobalString("root")
-		name := context.Args().Get(0)
-		pidf = filepath.Join(root, name, "runu.pid")
-		f, err = os.OpenFile(pidf,
-			os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
-
-		_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
-		f.Close()
-
-		logrus.Printf("PID=%d", cmd.Process.Pid)
 	}
+	// 1) pid file for runu itself
+	root := context.GlobalString("root")
+	pidf := filepath.Join(root, name, "runu.pid")
+	f, err := os.OpenFile(pidf,
+		os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
+
+	_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
+	f.Close()
+
+	logrus.Printf("PID=%d to pid file %s",
+		cmd.Process.Pid, pidf)
 
 	proc, _ := os.FindProcess(cmd.Process.Pid)
 	proc.Signal(syscall.Signal(syscall.SIGSTOP))

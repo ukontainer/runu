@@ -35,7 +35,10 @@ func resumeUkontainer(context *cli.Context, container string) error {
 	pid, _ := ioutil.ReadFile(pidFile)
 	pid_i, _ := strconv.Atoi(string(pid))
 
-	proc, _ := os.FindProcess(pid_i)
+	proc, err := os.FindProcess(pid_i)
+	if err != nil {
+		return fmt.Errorf("couldn't find pid %d\n", pid_i)
+	}
 	proc.Signal(syscall.Signal(syscall.SIGCONT))
 
 	return nil

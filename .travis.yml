@@ -1,6 +1,9 @@
 sudo: required
 dist: trusty
-language: generic
+language: go
+go:
+  - "1.10.x"
+
 cache:
   directories:
     - $HOME/.ccache

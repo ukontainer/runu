@@ -16,6 +16,8 @@ matrix:
     - os: osx
       before_install:
         - brew install jq
+        - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
+        - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
 script: 
   - go get github.com/opencontainers/runtime-spec/specs-go

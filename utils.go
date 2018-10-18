@@ -5,8 +5,6 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"bufio"
-	"io"
 	"syscall"
 
 	"github.com/urfave/cli"
@@ -67,14 +65,10 @@ func prepareUkontainer(context *cli.Context) error {
 
 	cmd := exec.Command("rexec", spec.Process.Args...)
 	cmd.Dir = rootfs
-	cmd.Env = append(os.Environ(),
-		"RUMP_VERBOSE=1",
-		"PYTHONHOME=/python",
-		"HOME=/",
-		"SUDO_UUID=1000",
-		"LKL_OFFLOAD=1",
-		"LKL_BOOT_CMDLINE=mem=1G",
-	)
+	// XXX: should exclude Env[0](PATH=..) since
+	// it eliminates following values
+	cmd.Env = append(os.Environ(), spec.Process.Env[1:]...)
+
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr

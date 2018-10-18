@@ -52,7 +52,7 @@ func main() {
 	app.Commands = []cli.Command{
 		createCommand,
 		runCommand,
-		// XXX: unimplemented
+		specCommand,
 		startCommand,
 		stateCommand,
 		execCommand,

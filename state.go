@@ -69,7 +69,7 @@ func createContainer(container, bundle, stateRoot string, spec *specs.Spec) erro
 	}
 	err = os.MkdirAll(stateDir, 0755)
 	if err != nil {
-		logrus.Warn("%s", err.Error())
+		fmt.Printf("%s\n", err.Error())
 		return err
 	}
 	defer func() {

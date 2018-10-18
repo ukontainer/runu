@@ -15,7 +15,7 @@ matrix:
         - sudo apt-get install jq
     - os: osx
       before_install:
-        - brew install jq
+        - brew install jq docker
 
 script: 
   - go get github.com/opencontainers/runtime-spec/specs-go
@@ -23,5 +23,5 @@ script:
   - go get github.com/sirupsen/logrus
   - go get github.com/opencontainers/runc/libcontainer/specconv
   - make
-  - bash test/standalone-test.sh
+  - bash -ex test/standalone-test.sh
 

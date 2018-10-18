@@ -2,7 +2,7 @@
 
 mkdir -p /tmp/bundle/rootfs
 mkdir -p /tmp/runu-root
-docker export $(docker create thehajime/runu-base:linux sh) \
+docker export $(docker create thehajime/runu-base:$TRAVIS_OS_NAME sh) \
     | tar -C /tmp/bundle/rootfs -xvf -
 
 rm -f config.json

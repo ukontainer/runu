@@ -54,6 +54,7 @@ func main() {
 		// XXX: unimplemented
 		startCommand,
 		stateCommand,
+		execCommand,
 		killCommand,
 		deleteCommand,
 	}
@@ -95,6 +96,5 @@ func main() {
 		fmt.Printf("%s\n", err)
 	}
 
-	logrus.Printf("Runu main return\n")
 }
 

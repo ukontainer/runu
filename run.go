@@ -24,7 +24,11 @@ var runCommand = cli.Command{
                         return fmt.Errorf("Missing container ID")
                 }
 
-		return startUnikernel(context)
+		// XXX: create + start
+		container := context.Args().Get(0)
+		prepareUkontainer(context)
+		return resumeUkontainer(context, container)
+
 	},
 }
 

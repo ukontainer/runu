@@ -1,7 +1,6 @@
 package main
 
 import (
-	"os"
 	"fmt"
 	"path/filepath"
 
@@ -35,7 +34,6 @@ var createCommand = cli.Command{
 }
 
 func cmdCreateUkon(context *cli.Context, attach bool) error {
-
 	root := context.GlobalString("root")
 	bundle := context.String("bundle")
 	container := context.Args().First()
@@ -59,20 +57,7 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 		return fmt.Errorf("failed to create container: %v", err)
 	}
 
-	// write pid file
-	if pidf := context.String("pid-file"); pidf != "" {
-		f, err := os.OpenFile(pidf,
-			os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
-		if err != nil {
-			fmt.Printf("ERR: %s\n", err)
-			return err
-		}
-		// os.Getpid() makes `runu kill` after create.
-		// checking pid	by containerd?
-		_, err = fmt.Fprintf(f, "%d", os.Getpid() + 1)
-		f.Close()
-	}
-
+	prepareUkontainer(context)
 	saveState("created", container, context)
 
 	return nil

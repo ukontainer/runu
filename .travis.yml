@@ -9,4 +9,10 @@ os:
   - osx
   - linux
 
+before_install:
+  - go get github.com/opencontainers/runtime-spec/specs-go
+  - go get github.com/urfave/cli
+  - go get github.com/sirupsen/logrus
+
+
 script: make

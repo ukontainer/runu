@@ -7,7 +7,7 @@ import (
 	"os"
 	"syscall"
 	"path/filepath"
-	_"github.com/sirupsen/logrus"
+	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 )
 
@@ -41,21 +41,25 @@ func resumeUkontainer(context *cli.Context, container string) error {
 	}
 
 	// wake the process
+	logrus.Debugf("proc %s, pid=%d", proc, pid_i)
 	proc.Signal(syscall.Signal(syscall.SIGCONT))
 
-	proc_stat, err := proc.Wait()
-	if proc_stat != nil {
-		waitstatus := proc_stat.Sys().(syscall.WaitStatus)
-		if waitstatus.Signal() != syscall.SIGINT &&
-			waitstatus.Signal() != syscall.SIGTERM {
-			panic(proc_stat)
+	// catch child errors if possible
+	go func() {
+		proc_stat, _ := proc.Wait()
+		if proc_stat != nil {
+			waitstatus := proc_stat.Sys().(syscall.WaitStatus)
+			if waitstatus.Signal() != syscall.SIGINT &&
+				waitstatus.Signal() != syscall.SIGTERM &&
+				!waitstatus.Exited() {
+				panic(proc_stat)
+			}
 		}
-	}
-	if err != nil {
-		panic(err)
-	}
-
-	saveState("stopped", container, context)
+		if proc_stat == nil {
+			logrus.Debugf("no process to wait. non-child process? (%d)",
+				pid_i)
+		}
+	}()
 
 	return nil
 }

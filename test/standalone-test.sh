@@ -15,15 +15,15 @@ do
 done
 
 rm -f config.json
-./runu spec
+runu spec
 
 
 run_test()
 {
-    ./runu --debug --root=/tmp/runu-root run --bundle=/tmp/bundle foo
+    runu --debug --root=/tmp/runu-root run --bundle=/tmp/bundle foo
     sleep 5
-    ./runu --debug --root=/tmp/runu-root kill foo 9
-    ./runu --debug --root=/tmp/runu-root delete foo
+    runu --debug --root=/tmp/runu-root kill foo 9
+    runu --debug --root=/tmp/runu-root delete foo
 }
 
 # test hello-world

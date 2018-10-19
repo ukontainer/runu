@@ -15,3 +15,7 @@ runu: $(SOURCES) Makefile
 	-tags "$(BUILDTAGS)" -o runu .
 
 all: runu
+
+install: all
+	$(INSTALL) -d $(DESTDIR)$(PREFIX)/bin/
+	$(INSTALL) -m 755 runu $(DESTDIR)$(PREFIX)/bin/

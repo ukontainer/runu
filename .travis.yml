@@ -26,5 +26,6 @@ script:
   - go get github.com/sirupsen/logrus
   - go get github.com/opencontainers/runc/libcontainer/specconv
   - make
+  - sudo make install
   - bash -ex test/standalone-test.sh
 

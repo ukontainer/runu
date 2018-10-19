@@ -92,7 +92,7 @@ func main() {
 		if err != nil {
 			return err
 		}
-		logrus.Debug("Runu called with args: %v\n", os.Args)
+		logrus.Debugf("Runu called with args: %v", os.Args)
 		return nil
 	}
 

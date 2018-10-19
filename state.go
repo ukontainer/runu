@@ -31,7 +31,7 @@ var stateCommand = cli.Command{
 	},
 }
 
-func saveState(status string, name string, context *cli.Context) error {
+func saveState(status string, container string, context *cli.Context) error {
 	root := context.GlobalString("root")
 	absRoot, err := filepath.Abs(root)
 
@@ -42,7 +42,7 @@ func saveState(status string, name string, context *cli.Context) error {
 	}
 
 	rootfs,_ := filepath.Abs(spec.Root.Path)
-	stateFile := filepath.Join(absRoot, name, stateJSON)
+	stateFile := filepath.Join(absRoot, container, stateJSON)
 	cs := &specs.State {
 		Version: spec.Version,
 		ID: context.Args().Get(0),

@@ -25,10 +25,10 @@ var killCommand = cli.Command{
                 }
 
 		root := context.GlobalString("root")
-		name := context.Args().Get(0)
+		container := context.Args().Get(0)
 		signal, _ := strconv.Atoi(context.Args().Get(1))
 
-		pidFile := filepath.Join(root, name, pid_file_priv)
+		pidFile := filepath.Join(root, container, pid_file_priv)
 		pid, _ := ioutil.ReadFile(pidFile)
 		pid_i, _ := strconv.Atoi(string(pid))
 
@@ -37,7 +37,7 @@ var killCommand = cli.Command{
 			return fmt.Errorf("couldn't find pid %d\n", pid_i)
 		}
 		proc.Signal(syscall.Signal(signal))
-		saveState("stopped", name, context)
+		saveState("stopped", container, context)
 		return nil
 	},
 }

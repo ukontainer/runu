@@ -100,7 +100,7 @@ func prepareUkontainer(context *cli.Context) error {
 	_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 	f.Close()
 
-	logrus.Debug("PID=%d to pid file %s",
+	logrus.Debugf("PID=%d to pid file %s",
 		cmd.Process.Pid, pidf)
 
 	proc, _ := os.FindProcess(cmd.Process.Pid)

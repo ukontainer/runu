@@ -2,6 +2,7 @@
 
 GO := go
 INSTALL := install
+PREFIX := /usr/local/
 SOURCES := $(shell find . 2>&1 | grep -E '.*\.(c|h|go)$$')
 COMMIT_NO := $(shell git rev-parse HEAD 2> /dev/null || true)
 COMMIT := $(if $(shell git status --porcelain --untracked-files=no),"${COMMIT_NO}-dirty","${COMMIT_NO}")

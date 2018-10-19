@@ -11,6 +11,8 @@ fi
     jq '.runtimes.runu |= {"path":"/usr/local/bin/runu","runtimeArgs":[]}' | \
     tee /tmp/tmp.json
 sudo mv /tmp/tmp.json /etc/docker/daemon.json
+sudo service docker restart
+
 
 # test hello-world
 docker run --rm -i --runtime=runu thehajime/runu-base:linux hello
@@ -18,7 +20,7 @@ docker run --rm -i --runtime=runu thehajime/runu-base:linux hello
 # test ping
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
  --runtime=runu thehajime/runu-base:linux \
- ping imgs/python.iso -- 127.0.0.1
+ ping imgs/python.iso -- -c5 127.0.0.1
 
 # test python
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
@@ -29,7 +31,6 @@ docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
 
 # test nginx
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
- -e HOME=/ -e PYTHONHOME=/python \
  --runtime=runu thehajime/runu-base:linux \
- nginx imgs/data.iso
+ nginx imgs/data.iso || true
 

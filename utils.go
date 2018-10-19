@@ -103,22 +103,11 @@ func prepareUkontainer(context *cli.Context) error {
 	logrus.Debugf("PID=%d to pid file %s",
 		cmd.Process.Pid, pidf)
 
-	proc, _ := os.FindProcess(cmd.Process.Pid)
+	proc, err := os.FindProcess(cmd.Process.Pid)
+	if err != nil {
+		return fmt.Errorf("couldn't find pid %d\n", cmd.Process.Pid)
+	}
 	proc.Signal(syscall.Signal(syscall.SIGSTOP))
-
-	saveState("running", name, context)
-
-	go func() {
-		if err := cmd.Wait(); err != nil {
-			waitstatus := cmd.ProcessState.Sys().(syscall.WaitStatus)
-			fmt.Printf("%s\n", err)
-			if !waitstatus.Signaled() {
-				panic(err)
-			}
-		}
-
-		saveState("stopped", name, context)
-	}()
 
 	return nil
 }

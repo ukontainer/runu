@@ -3,6 +3,16 @@
 mkdir -p /tmp/bundle/rootfs
 mkdir -p /tmp/runu-root
 
+fold_start() {
+  echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
+}
+
+fold_end() {
+  echo -e "\ntravis_fold:end:$1\r"
+}
+
+
+fold_start test.0 "preparation test"
 # get script from moby
 curl https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh \
      -o /tmp/download-frozen-image-v2.sh
@@ -17,6 +27,7 @@ done
 rm -f config.json
 runu spec
 
+fold_end test.0
 
 run_test()
 {
@@ -27,20 +38,26 @@ run_test()
 }
 
 # test hello-world
+fold_start test.1 "running test"
 cat config.json | jq '.process.args |=["hello"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
 run_test
+fold_end test.1
 
 # test ping
+fold_start test.2 "running test"
 cat config.json | jq '.process.args |=["ping","--","127.0.0.1"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
 run_test
+fold_end test.2
 
 # test python
-cat config.json | jq '.process.args |=["python", "imgs/python.iso", "imgs/python.img", "--", "-c", "print(\"hello world\")"] ' > /tmp/1
+fold_start test.3 "running test"
+cat config.json | jq '.process.args |=["python", "imgs/python.iso", "imgs/python.img", "--", "-c", "print(\"hello world from python(runu)\")"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
 RUMP_VERBOSE=1 PYTHONHOME=/python run_test
+fold_end test.3
 

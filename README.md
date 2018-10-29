@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/libos-nuse/runu.svg?branch=master)](https://travis-ci.org/libos-nuse/runu)
 # runu
 OCI runtime for frankenlibc unikernel
 

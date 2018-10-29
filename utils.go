@@ -6,6 +6,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"syscall"
+	"strings"
 
 	"github.com/urfave/cli"
 	"github.com/sirupsen/logrus"
@@ -61,13 +62,21 @@ func prepareUkontainer(context *cli.Context) error {
 	rootfs,_ := filepath.Abs(spec.Root.Path)
 	// call rexec
 	os.Setenv("PATH", rootfs + ":" + rootfs +
-		"/sbin:" + rootfs + "/bin:${PATH}")
+		"/sbin:" + rootfs + "/bin")
 
 	cmd := exec.Command("rexec", spec.Process.Args...)
 	cmd.Dir = rootfs
-	// XXX: should exclude Env[0](PATH=..) since
+
+	// XXX: should exclude duplicated PATH variable in spec.Env since
 	// it eliminates following values
-	cmd.Env = append(os.Environ(), spec.Process.Env[1:]...)
+	specEnv := []string{}
+	for _, env := range spec.Process.Env {
+		if !strings.HasPrefix(env, "PATH=") {
+			specEnv = append(specEnv, env)
+		}
+	}
+	cmd.Env = append(os.Environ(), specEnv...)
+	logrus.Debugf("Starting command %s, PATH= %s\n", cmd.Args, cmd.Env)
 
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -41,7 +41,7 @@ func resumeUkontainer(context *cli.Context, container string) error {
 	}
 
 	// wake the process
-	logrus.Debugf("proc %s, pid=%d", proc, pid_i)
+	logrus.Debugf("proc %p, pid=%d", proc, pid_i)
 	proc.Signal(syscall.Signal(syscall.SIGCONT))
 
 	// catch child errors if possible

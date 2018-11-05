@@ -17,7 +17,7 @@ fold_end() {
 
 # update daemon.json
 (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
-    jq '.runtimes.runu |= {"path":"/usr/local/bin/runu","runtimeArgs":[]}' | \
+    jq '.runtimes.runu |= {"path":"'${TRAVIS_HOME}'/gopath/bin/runu","runtimeArgs":[]}' | \
     tee /tmp/tmp.json
 sudo mv /tmp/tmp.json /etc/docker/daemon.json
 sudo service docker restart

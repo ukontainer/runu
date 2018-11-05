@@ -15,18 +15,16 @@ matrix:
         - sudo apt-get install jq
     - os: osx
       before_install:
-        - mkdir -p ~/.local/bin
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+        - mkdir -p ~/.local/bin
         - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
+before_install:
+  - go vet ./...
+
 script:
-  - go get github.com/opencontainers/runtime-spec/specs-go
-  - go get github.com/urfave/cli
-  - go get github.com/sirupsen/logrus
-  - go get github.com/opencontainers/runc/libcontainer/specconv
-  - make
-  - sudo make install
   - bash -ex test/standalone-test.sh
   - bash -ex test/docker-oci-test.sh
+  - bash -ex test/containerd-ctr-test.sh
 

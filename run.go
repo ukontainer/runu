@@ -8,9 +8,9 @@ import (
 
 // default action is to start a container
 var runCommand = cli.Command{
-	Name:  "run",
+	Name:      "run",
 	ArgsUsage: `<container-id>`,
-	Usage: "create and run a container",
+	Usage:     "create and run a container",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "bundle, b",
@@ -19,10 +19,10 @@ var runCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-                args := context.Args()
-                if args.Present() == false {
-                        return fmt.Errorf("Missing container ID")
-                }
+		args := context.Args()
+		if args.Present() == false {
+			return fmt.Errorf("Missing container ID")
+		}
 
 		// XXX: create + start
 		container := context.Args().Get(0)
@@ -31,4 +31,3 @@ var runCommand = cli.Command{
 
 	},
 }
-

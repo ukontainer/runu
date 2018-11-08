@@ -5,11 +5,11 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	"syscall"
 	"strings"
+	"syscall"
 
-	"github.com/urfave/cli"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 const (
@@ -50,7 +50,6 @@ func checkArgs(context *cli.Context, expected, checkType int) error {
 	return nil
 }
 
-
 func prepareUkontainer(context *cli.Context) error {
 	name := context.Args().Get(0)
 	spec, err := setupSpec(context)
@@ -59,10 +58,10 @@ func prepareUkontainer(context *cli.Context) error {
 		return err
 	}
 
-	rootfs,_ := filepath.Abs(spec.Root.Path)
+	rootfs, _ := filepath.Abs(spec.Root.Path)
 	// call rexec
-	os.Setenv("PATH", rootfs + ":" + rootfs +
-		"/sbin:" + rootfs + "/bin")
+	os.Setenv("PATH", rootfs+":"+rootfs+
+		"/sbin:"+rootfs+"/bin")
 
 	cmd := exec.Command("rexec", spec.Process.Args...)
 	cmd.Dir = rootfs
@@ -96,17 +95,17 @@ func prepareUkontainer(context *cli.Context) error {
 			fmt.Printf("ERR: %s\n", err)
 			return err
 		}
-		_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
+		_, _ = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 		f.Close()
 
 	}
 	// 1) pid file for runu itself
 	root := context.GlobalString("root")
-	pidf := filepath.Join(root, name, pid_file_priv)
-	f, err := os.OpenFile(pidf,
+	pidf := filepath.Join(root, name, pidFilePriv)
+	f, _ := os.OpenFile(pidf,
 		os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
 
-	_, err = fmt.Fprintf(f, "%d", cmd.Process.Pid)
+	_, _ = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 	f.Close()
 
 	logrus.Debugf("PID=%d to pid file %s",
@@ -114,7 +113,7 @@ func prepareUkontainer(context *cli.Context) error {
 
 	proc, err := os.FindProcess(cmd.Process.Pid)
 	if err != nil {
-		return fmt.Errorf("couldn't find pid %d\n", cmd.Process.Pid)
+		return fmt.Errorf("couldn't find pid %d", cmd.Process.Pid)
 	}
 	proc.Signal(syscall.Signal(syscall.SIGSTOP))
 

@@ -8,8 +8,8 @@ import (
 )
 
 var createCommand = cli.Command{
-	Name:  "create",
-	Usage: "create a container",
+	Name:      "create",
+	Usage:     "create a container",
 	ArgsUsage: `<container-id>`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -23,10 +23,10 @@ var createCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-                args := context.Args()
-                if args.Present() == false {
-                        return fmt.Errorf("Missing container ID")
-                }
+		args := context.Args()
+		if args.Present() == false {
+			return fmt.Errorf("Missing container ID")
+		}
 
 		cmdCreateUkon(context, false)
 		return nil
@@ -38,7 +38,7 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 	bundle := context.String("bundle")
 	container := context.Args().First()
 	ocffile := filepath.Join(bundle, specConfig)
-	spec, err :=  loadSpec(ocffile)
+	spec, err := loadSpec(ocffile)
 
 	if err != nil {
 		return fmt.Errorf("load config failed: %v", err)
@@ -46,11 +46,6 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 	if container == "" {
 		return fmt.Errorf("no container id provided")
 	}
-/*
-	if err = checkConsole(context, spec.Process, attach); err != nil {
-		return err
-	}
-*/
 
 	err = createContainer(container, bundle, root, spec)
 	if err != nil {

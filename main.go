@@ -5,18 +5,18 @@ import (
 	"os"
 	"strings"
 
-	goruntime "runtime"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
+	goruntime "runtime"
 )
 
 const (
-	specConfig = "config.json"
-	stateJSON = "state.json"
-	usage = "runu run [ -b bundle ] <container-id>"
-	arch = goruntime.GOARCH
-	pid_file_priv = "runu.pid"
+	specConfig  = "config.json"
+	stateJSON   = "state.json"
+	usage       = "runu run [ -b bundle ] <container-id>"
+	arch        = goruntime.GOARCH
+	pidFilePriv = "runu.pid"
 )
 
 func main() {
@@ -88,7 +88,7 @@ func main() {
 				context.GlobalString("log-format"))
 		}
 
-		err := handleSystemLog("","")
+		err := handleSystemLog("", "")
 		if err != nil {
 			return err
 		}
@@ -101,4 +101,3 @@ func main() {
 	}
 
 }
-

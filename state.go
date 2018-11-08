@@ -1,24 +1,24 @@
 package main
 
 import (
-	"os"
-	"fmt"
-	"io/ioutil"
 	"encoding/json"
-	"path/filepath"
-	"github.com/urfave/cli"
-	"github.com/sirupsen/logrus"
+	"fmt"
 	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
+	"io/ioutil"
+	"os"
+	"path/filepath"
 )
 
 var stateCommand = cli.Command{
-	Name:  "state",
+	Name:      "state",
 	ArgsUsage: `<container-id>`,
 	Action: func(context *cli.Context) error {
-                args := context.Args()
-                if args.Present() == false {
-                        return fmt.Errorf("Missing container ID")
-                }
+		args := context.Args()
+		if args.Present() == false {
+			return fmt.Errorf("Missing container ID")
+		}
 
 		root := context.GlobalString("root")
 		name := context.Args().First()
@@ -33,7 +33,7 @@ var stateCommand = cli.Command{
 
 func saveState(status string, container string, context *cli.Context) error {
 	root := context.GlobalString("root")
-	absRoot, err := filepath.Abs(root)
+	absRoot, _ := filepath.Abs(root)
 
 	spec, err := setupSpec(context)
 	if err != nil {
@@ -41,19 +41,18 @@ func saveState(status string, container string, context *cli.Context) error {
 		return err
 	}
 
-	rootfs,_ := filepath.Abs(spec.Root.Path)
+	rootfs, _ := filepath.Abs(spec.Root.Path)
 	stateFile := filepath.Join(absRoot, container, stateJSON)
-	cs := &specs.State {
+	cs := &specs.State{
 		Version: spec.Version,
-		ID: context.Args().Get(0),
-		Status: status,
-		Bundle: rootfs,
+		ID:      context.Args().Get(0),
+		Status:  status,
+		Bundle:  rootfs,
 	}
 	stateData, _ := json.MarshalIndent(cs, "", "\t")
 
 	if err := ioutil.WriteFile(stateFile, stateData, 0666); err != nil {
-		panic(err);
-		return err
+		panic(err)
 	}
 
 	return nil

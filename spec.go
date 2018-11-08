@@ -1,20 +1,20 @@
 package main
 
 import (
-	"fmt"
-	"os"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
 
-	"github.com/urfave/cli"
-	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/opencontainers/runc/libcontainer/specconv"
+	"github.com/opencontainers/runtime-spec/specs-go"
+	"github.com/urfave/cli"
 )
 
 var specCommand = cli.Command{
-	Name:      "spec",
-	Usage:     "create a new specification file",
-	ArgsUsage: "",
+	Name:        "spec",
+	Usage:       "create a new specification file",
+	ArgsUsage:   "",
 	Description: `The spec command creates the new specification file named "` + specConfig + `" for the bundle.`,
 	Flags: []cli.Flag{
 		cli.StringFlag{
@@ -52,13 +52,10 @@ var specCommand = cli.Command{
 		if err != nil {
 			return err
 		}
-		if err := ioutil.WriteFile(specConfig, data, 0666); err != nil {
-			return err
-		}
-		return nil
+
+		return ioutil.WriteFile(specConfig, data, 0666)
 	},
 }
-
 
 // loadSpec loads the specification from the provided path.
 func loadSpec(cPath string) (spec *specs.Spec, err error) {

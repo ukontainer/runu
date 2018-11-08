@@ -2,8 +2,8 @@ package main
 
 import (
 	"log/syslog"
-	"time"
 	"os"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	lSyslog "github.com/sirupsen/logrus/hooks/syslog"

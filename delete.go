@@ -6,7 +6,7 @@ import (
 )
 
 var deleteCommand = cli.Command{
-	Name:  "delete",
+	Name:      "delete",
 	ArgsUsage: `<container-id>`,
 	Flags: []cli.Flag{
 		cli.BoolFlag{
@@ -15,10 +15,10 @@ var deleteCommand = cli.Command{
 		},
 	},
 	Action: func(context *cli.Context) error {
-                args := context.Args()
-                if args.Present() == false {
-                        return fmt.Errorf("Missing container ID")
-                }
+		args := context.Args()
+		if args.Present() == false {
+			return fmt.Errorf("Missing container ID")
+		}
 
 		container := context.Args().First()
 		return deleteContainer(context.GlobalString("root"), container)

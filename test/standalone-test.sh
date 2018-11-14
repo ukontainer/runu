@@ -40,7 +40,7 @@ run_test()
 }
 
 # test hello-world
-fold_start test.1 "running test"
+fold_start test.1 "test hello"
 cat config.json | jq '.process.args |=["hello"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
@@ -48,7 +48,7 @@ run_test
 fold_end test.1
 
 # test ping
-fold_start test.2 "running test"
+fold_start test.2 "test ping"
 cat config.json | jq '.process.args |=["ping","--","127.0.0.1"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
@@ -56,10 +56,17 @@ run_test
 fold_end test.2
 
 # test python
-fold_start test.3 "running test"
+fold_start test.3 "test python"
 cat config.json | jq '.process.args |=["python", "imgs/python.iso", "imgs/python.img", "--", "-c", "print(\"hello world from python(runu)\")"] ' > /tmp/1
 mv /tmp/1 config.json
 cp config.json /tmp/bundle/
 RUMP_VERBOSE=1 PYTHONHOME=/python run_test
 fold_end test.3
 
+#test nginx
+fold_start test.4 "test nginx"
+cat config.json | jq '.process.args |=["nginx", "imgs/data.iso", "tap:tap0", "config:lkl.json"] ' > /tmp/1
+mv /tmp/1 config.json
+cp config.json /tmp/bundle/
+RUMP_VERBOSE=1 run_test
+fold_end test.4

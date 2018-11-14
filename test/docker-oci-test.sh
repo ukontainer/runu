@@ -25,19 +25,19 @@ sudo service docker restart
 
 
 # test hello-world
-fold_start test.docker.0 "running test"
+fold_start test.docker.0 "test hello"
 docker run --rm -i --runtime=runu thehajime/runu-base:$IMG_VERSION hello
 fold_end test.docker.0
 
 # test ping
-fold_start test.docker.1 "running test"
+fold_start test.docker.1 "test ping"
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
  --runtime=runu thehajime/runu-base:$IMG_VERSION \
  ping imgs/python.iso -- -c5 127.0.0.1
 fold_end test.docker.1
 
 # test python
-fold_start test.docker.2 "running test"
+fold_start test.docker.2 "test python"
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
  -e HOME=/ -e PYTHONHOME=/python \
  --runtime=runu thehajime/runu-base:$IMG_VERSION \
@@ -46,9 +46,12 @@ docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
 fold_end test.docker.2
 
 # test nginx
-fold_start test.docker.3 "running test"
-docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
+fold_start test.docker.3 "test nginx"
+CID=`docker run -d --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
  --runtime=runu thehajime/runu-base:$IMG_VERSION \
- nginx imgs/data.iso || true
+ nginx imgs/python.iso imgs/data.iso`
+sleep 2
+docker logs $CID
+docker kill $CID
 fold_end test.docker.3
 

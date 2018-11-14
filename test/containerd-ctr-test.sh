@@ -41,21 +41,26 @@ ctr -a /tmp/ctrd/run/containerd/containerd.sock i pull docker.io/thehajime/runu-
 fold_end test.containerd.0 "pull image"
 
 # test hello-world
+fold_start test.containerd.1 "test hello"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     docker.io/thehajime/runu-base:$IMG_VERSION hello0 hello &
 sleep 1
 sudo killall -9 containerd-shim-v1-darwin | true
+fold_end test.containerd.1
 
 # test ping
+fold_start test.containerd.2 "test ping"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     docker.io/thehajime/runu-base:$IMG_VERSION hello1 \
     ping imgs/python.iso -- -c5 127.0.0.1 &
 sleep 6
 sudo killall -9 containerd-shim-v1-darwin | true
+fold_end test.containerd.2
 
 # test python
+fold_start test.containerd.3 "test python"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     --env HOME=/ --env PYTHONHOME=/python \
@@ -64,12 +69,14 @@ ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     -c "print(\"hello world from python(docker-runu)\")" &
 sleep 3
 sudo killall -9 containerd-shim-v1-darwin | true
+fold_end test.containerd.3
 
 # test nginx
-# ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
-#     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
-#     --env LKL_OFFLOAD=1 \
-#     docker.io/thehajime/runu-base:$IMG_VERSION hello3 \
-#     nginx imgs/data.iso &
-# sudo killall -9 containerd-shim-v1-darwin | true
-
+fold_start test.containerd.4 "test nginx"
+ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
+    run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
+    docker.io/thehajime/runu-base:$IMG_VERSION nginx1 \
+    nginx imgs/data.iso &
+sleep 3
+sudo killall -9 containerd-shim-v1-darwin | true
+fold_end test.containerd.4

@@ -3,8 +3,6 @@
 mkdir -p /tmp/bundle/rootfs
 mkdir -p /tmp/runu-root
 
-IMG_VERSION=0.1
-
 fold_start() {
   echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
 }
@@ -18,7 +16,7 @@ fold_start test.0 "preparation test"
 # get script from moby
 curl https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh \
      -o /tmp/download-frozen-image-v2.sh
-bash /tmp/download-frozen-image-v2.sh /tmp/ thehajime/runu-base:$IMG_VERSION-$TRAVIS_OS_NAME
+bash /tmp/download-frozen-image-v2.sh /tmp/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME
 
 # extract images from layers
 for layer in `find /tmp/ -name layer.tar`

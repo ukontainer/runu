@@ -6,6 +6,9 @@ cache:
   directories:
     - $HOME/.ccache
 
+env:
+  - DOCKER_IMG_VERSION=0.1
+
 matrix:
   include:
     - os: linux

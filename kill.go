@@ -29,14 +29,22 @@ var killCommand = cli.Command{
 		signal, _ := strconv.Atoi(context.Args().Get(1))
 
 		pidFile := filepath.Join(root, container, pidFilePriv)
-		pid, _ := ioutil.ReadFile(pidFile)
+		pid, err := ioutil.ReadFile(pidFile)
+		if err != nil {
+			return fmt.Errorf("couldn't find pidfile %s(%s)",
+				pidFilePriv, err)
+		}
 		pidI, _ := strconv.Atoi(string(pid))
 
 		proc, err := os.FindProcess(pidI)
 		if err != nil {
-			return fmt.Errorf("couldn't find pid %d", pidI)
+			return fmt.Errorf("couldn't find pid %d(%s)", pidI, err)
 		}
-		proc.Signal(syscall.Signal(signal))
+		err = proc.Signal(syscall.Signal(signal))
+		if err != nil {
+			return fmt.Errorf("couldn't signal to pid %d(%s)",
+				pidI, err)
+		}
 		saveState("stopped", container, context)
 		return nil
 	},

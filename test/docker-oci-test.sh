@@ -5,14 +5,10 @@ if [ $TRAVIS_OS_NAME != "linux" ] ; then
     exit 0
 fi
 
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-fold_start() {
-  echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
-}
-
-fold_end() {
-  echo -e "\ntravis_fold:end:$1\r"
-}
+# prepare RUNU_AUX_DIR
+create_runu_aux_dir
 
 # update daemon.json
 (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
@@ -21,35 +17,49 @@ fold_end() {
 sudo mv /tmp/tmp.json /etc/docker/daemon.json
 sudo service docker restart
 
-
 # test hello-world
-fold_start test.docker.0 "test hello"
+fold_start test.docker.0 "docker hello"
 docker run --rm -i --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION hello
 fold_end test.docker.0
 
 # test ping
-fold_start test.docker.1 "test ping"
-docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
+fold_start test.docker.1 "docker ping"
+docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 -e LKL_ROOTFS=imgs/python.iso \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
- ping imgs/python.iso -- -c5 127.0.0.1
+ ping -c5 127.0.0.1
 fold_end test.docker.1
 
 # test python
-fold_start test.docker.2 "test python"
+fold_start test.docker.2 "docker python"
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
- -e HOME=/ -e PYTHONHOME=/python \
+ -e HOME=/ -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.iso \
+ -e LKL_NET=imgs/python.img \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
- python imgs/python.iso imgs/python.img -- \
- -c "print(\"hello world from python(docker-runu)\")"
+ python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2
 
 # test nginx
-fold_start test.docker.3 "test nginx"
-CID=`docker run -d --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
+fold_start test.docker.3 "docker nginx"
+CID=`docker run -d --rm -i -e RUMP_VERBOSE=1 \
+ -e LKL_NET=imgs/data.iso -e LKL_ROOTFS=imgs/python.iso \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
- nginx imgs/python.iso imgs/data.iso`
+ nginx`
 sleep 2
+docker ps -a
 docker logs $CID
 docker kill $CID
 fold_end test.docker.3
 
+# alipine image test
+fold_start test.docker.4 "docker alpine ldso"
+docker run -i --runtime=runu --rm -e RUMP_VERBOSE=1 \
+       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine uname -a
+docker run -i --runtime=runu --rm -e UMP_VERBOSE=1 \
+       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ping -c 5 127.0.0.1
+docker run -i --runtime=runu --rm -e UMP_VERBOSE=1 \
+       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine dmesg | head
+docker run -i --runtime=runu --rm -e UMP_VERBOSE=1 \
+       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ls -l /
+docker run -i --runtime=runu --rm -e UMP_VERBOSE=1 \
+       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine df -ha
+fold_end test.docker.4

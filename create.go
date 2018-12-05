@@ -28,8 +28,7 @@ var createCommand = cli.Command{
 			return fmt.Errorf("Missing container ID")
 		}
 
-		cmdCreateUkon(context, false)
-		return nil
+		return cmdCreateUkon(context, false)
 	},
 }
 
@@ -52,8 +51,8 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 		return fmt.Errorf("failed to create container: %v", err)
 	}
 
-	prepareUkontainer(context)
+	err = prepareUkontainer(context)
 	saveState("created", container, context)
 
-	return nil
+	return err
 }

@@ -5,14 +5,7 @@ if [ $TRAVIS_OS_NAME != "osx" ] ; then
     exit 0
 fi
 
-
-fold_start() {
-  echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
-}
-
-fold_end() {
-  echo -e "\ntravis_fold:end:$1\r"
-}
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
 
 # build custom containerd
 fold_start test.containerd.0 "containerd build"
@@ -51,8 +44,9 @@ fold_end test.containerd.1
 fold_start test.containerd.2 "test ping"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
+    --env LKL_ROOTFS=imgs/python.iso \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello1 \
-    ping imgs/python.iso -- -c5 127.0.0.1 &
+    ping -c5 127.0.0.1 &
 sleep 6
 sudo killall -9 containerd-shim-v1-darwin | true
 fold_end test.containerd.2
@@ -62,9 +56,9 @@ fold_start test.containerd.3 "test python"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     --env HOME=/ --env PYTHONHOME=/python \
+    --env LKL_ROOTFS=imgs/python.img \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello2 \
-    python imgs/python.img -- \
-    -c "print(\"hello world from python(docker-runu)\")" &
+    python -c "print(\"hello world from python(docker-runu)\")" &
 sleep 3
 sudo killall -9 containerd-shim-v1-darwin | true
 fold_end test.containerd.3
@@ -73,8 +67,9 @@ fold_end test.containerd.3
 fold_start test.containerd.4 "test nginx"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
+    --env LKL_ROOTFS=imgs/data.iso \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION nginx1 \
-    nginx imgs/data.iso &
+    nginx &
 sleep 3
 sudo killall -9 containerd-shim-v1-darwin | true
 fold_end test.containerd.4

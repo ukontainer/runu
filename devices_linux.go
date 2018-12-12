@@ -14,5 +14,14 @@ var (
 			Permissions: "rwm",
 			FileMode:    0666,
 		},
+		// /dev/net/tun
+		{
+			Path:        "/dev/net/tun",
+			Type:        'c',
+			Major:       10,
+			Minor:       200,
+			Permissions: "rwm",
+			FileMode:    0666,
+		},
 	}
 )

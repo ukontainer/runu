@@ -13,10 +13,6 @@ fold_end() {
 create_osx_chroot() {
     ROOTFS=$1
     if [ $TRAVIS_OS_NAME == "osx" ]; then
-        # for rexec command
-	mkdir -p $ROOTFS/usr
-	rsync -avz /usr/lib $ROOTFS/usr/
-
 	sudo mount -t devfs devfs $ROOTFS/dev
     fi
 }

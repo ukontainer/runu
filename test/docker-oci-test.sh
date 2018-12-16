@@ -32,8 +32,7 @@ fold_end test.docker.1
 # test python
 fold_start test.docker.2 "docker python"
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
- -e HOME=/ -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.iso \
- -e LKL_NET=imgs/python.img \
+ -e HOME=/ -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.img \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
  python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2
@@ -41,7 +40,7 @@ fold_end test.docker.2
 # test nginx
 fold_start test.docker.3 "docker nginx"
 CID=`docker run -d --rm -i -e RUMP_VERBOSE=1 \
- -e LKL_NET=imgs/data.iso -e LKL_ROOTFS=imgs/python.iso \
+ -e LKL_ROOTFS=imgs/data.iso \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
  nginx`
 sleep 2

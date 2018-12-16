@@ -10,10 +10,13 @@ fold_start test.0 "preparation test"
 # get script from moby
 curl https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh \
      -o /tmp/download-frozen-image-v2.sh
-bash /tmp/download-frozen-image-v2.sh /tmp/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME
+
+# get image runu-base
+mkdir -p /tmp/runu
+bash /tmp/download-frozen-image-v2.sh /tmp/runu/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME
 
 # extract images from layers
-for layer in `find /tmp/ -name layer.tar`
+for layer in `find /tmp/runu -name layer.tar`
 do
  tar xvfz $layer -C $HOME/tmp/bundle/rootfs
 done
@@ -57,7 +60,7 @@ fold_end test.2
 fold_start test.3 "test python"
 cat config.json | \
     jq '.process.args |=["python", "-c", "print(\"hello world from python(runu)\")"] ' | \
-    jq '.process.env |= .+["LKL_ROOTFS=imgs/python.iso", "LKL_NET=imgs/python.img", "RUMP_VERBOSE=1", "HOME=/", "PYTHONHOME=/python"]' > $HOME/tmp/bundle/config.json
+    jq '.process.env |= .+["LKL_ROOTFS=imgs/python.img", "RUMP_VERBOSE=1", "HOME=/", "PYTHONHOME=/python"]' > $HOME/tmp/bundle/config.json
 run_test "immediate"
 fold_end test.3
 
@@ -65,7 +68,48 @@ fold_end test.3
 fold_start test.4 "test nginx"
 cat config.json | \
     jq '.process.args |=["nginx"]' | \
-    jq '.process.env |= .+["LKL_NET=imgs/data.iso", "LKL_ROOTFS=imgs/python.iso"]' \
+    jq '.process.env |= .+["LKL_ROOTFS=imgs/data.iso"]' \
     > $HOME/tmp/bundle/config.json
 RUMP_VERBOSE=1 run_test
 fold_end test.4
+
+
+if [ $TRAVIS_OS_NAME != "linux" ] ; then
+    echo "alpine image test only supports on Linux host. Skipped"
+    exit 0
+fi
+
+# download alpine image
+fold_start test.0 "test alpine"
+mkdir -p /tmp/alpine
+mkdir -p $HOME/tmp/alpine/bundle/rootfs/dev
+bash /tmp/download-frozen-image-v2.sh /tmp/alpine alpine:latest
+for layer in `find /tmp/alpine -name layer.tar`
+do
+ tar xvfz $layer -C $HOME/tmp/alpine/bundle/rootfs
+done
+
+ls -lR $HOME/tmp/alpine/bundle/rootfs
+
+# prepare RUNU_AUX_DIR
+create_runu_aux_dir
+
+run_test_alpine()
+{
+    flag=$1
+
+    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root run --bundle=$HOME/tmp/alpine/bundle foo
+    sleep 5
+    if [ "$flag" != "immediate" ]; then
+        sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root kill foo 9
+    fi
+    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root delete foo
+}
+
+#test alpine
+cat config.json | \
+    jq '.process.args |=["ls", "-l", "/"]' | \
+    jq '.process.env |= .+["RUNU_AUX_DIR='$RUNU_AUX_DIR'"]' \
+    > $HOME/tmp/alpine/bundle/config.json
+RUMP_VERBOSE=1 run_test_alpine "immediate"
+fold_end test.0

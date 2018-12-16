@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	goruntime "runtime"
+	"strconv"
 	"strings"
 	"syscall"
 
@@ -23,6 +24,10 @@ const (
 
 var (
 	runuAuxFileDir = "/usr/local/lib/runu"
+	FDINFO_NAME_CONFIGJSON =  "__RUMP_FDINFO_CONFIGJSON"
+	FDINFO_ENV_PREFIX_NET = "__RUMP_FDINFO_NET_"
+	FDINFO_ENV_PREFIX_DISK =  "__RUMP_FDINFO_DISK_"
+	FDINFO_ENV_PREFIX_ROOT = "__RUMP_FDINFO_ROOT"
 )
 
 func checkArgs(context *cli.Context, expected, checkType int) error {
@@ -77,12 +82,6 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 		}
 	}
 
-	// copy rexec to rootfs/sbin/
-	if err := copyFile(runuAuxFileDir+"/rexec",
-		rootfs+"/sbin/rexec", 0755); err != nil {
-		return err
-	}
-
 	// XXX: only for alpine
 	// install frankenlibc-ed libc.so to the system one
 	if err := copyFile(runuAuxFileDir+"/libc.so",
@@ -93,52 +92,53 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 	return nil
 }
 
-func parseArgsEnvs(spec *specs.Spec, specEnv *[]string, rootfs string) []string {
-	specArgs := []string{spec.Process.Args[0]}
-	lklJson := ""
-	lklNet := ""
-	lklRootfs := ""
+func parseEnvs(spec *specs.Spec, rootfs string) ([]string, []*os.File) {
+	specEnv := []string{}
+	fds := []*os.File{}
+	fdNum := 3
 
 	for _, env := range spec.Process.Env {
 		// look for LKL_ROOTFS env for .img/.iso files
 		if strings.HasPrefix(env, "LKL_ROOTFS=") {
-			lklRootfs = strings.TrimLeft(env, "LKL_ROOTFS=")
+			lklRootfs := strings.TrimLeft(env, "LKL_ROOTFS=")
+			fd := openRootfsFd(rootfs+"/"+lklRootfs)
+			fds = append(fds, fd)
+			specEnv = append(specEnv, FDINFO_ENV_PREFIX_ROOT+"=" + strconv.Itoa(fdNum))
+			fdNum++
 			continue
 		}
 		// look for LKL_NET env for tap/macvtap devices
 		if strings.HasPrefix(env, "LKL_NET=") {
-			lklNet = strings.TrimLeft(env, "LKL_NET=")
+			lklNet := strings.TrimLeft(env, "LKL_NET=")
+
+			fd := openNetFd(lklNet, spec.Process.Env)
+			fds = append(fds, fd)
+			specEnv = append(specEnv, FDINFO_ENV_PREFIX_NET+lklNet+"=" + strconv.Itoa(fdNum))
+			fdNum++
 			continue
 		}
 		// look for LKL_CONFIG env for json file
 		if strings.HasPrefix(env, "LKL_CONFIG=") {
-			lklJson = strings.TrimLeft(env, "LKL_CONFIG=")
+			lklJson := strings.TrimLeft(env, "LKL_CONFIG=")
 			copyFile(lklJson, rootfs+"/"+filepath.Base(lklJson), 0644)
 			lklJson = "/" + filepath.Base(lklJson)
+
+			fd := openJsonFd(rootfs+"/"+lklJson)
+			fds = append(fds, fd)
+			specEnv = append(specEnv, FDINFO_NAME_CONFIGJSON +"=" + strconv.Itoa(fdNum))
+			fdNum++
 			continue
 		}
 
 		// XXX: should exclude duplicated PATH variable in spec.Env since
 		// it eliminates following values
 		if !strings.HasPrefix(env, "PATH=") {
-			*specEnv = append(*specEnv, env)
+			specEnv = append(specEnv, env)
 		}
 	}
 
-	if lklRootfs != "" {
-		specArgs = append(specArgs, lklRootfs)
-	}
-	if lklNet != "" {
-		specArgs = append(specArgs, lklNet)
-	}
-	if lklJson != "" {
-		specArgs = append(specArgs, "config:"+lklJson)
-	}
 
-	specArgs = append(specArgs, "--")
-	specArgs = append(specArgs, spec.Process.Args[1:]...)
-
-	return specArgs
+	return specEnv, fds
 }
 
 func prepareUkontainer(context *cli.Context) error {
@@ -150,9 +150,8 @@ func prepareUkontainer(context *cli.Context) error {
 	}
 
 	rootfs, _ := filepath.Abs(spec.Root.Path)
-	// parse envs and args
-	specEnv := []string{}
-	specArgs := parseArgsEnvs(spec, &specEnv, rootfs)
+	// open fds to pass to main programs later
+	specEnv,fds := parseEnvs(spec, rootfs)
 
 	// fixup ldso to a pulled image
 	err = changeLdso(spec, rootfs)
@@ -165,10 +164,10 @@ func prepareUkontainer(context *cli.Context) error {
 	}
 
 	// call rexec
-	os.Setenv("PATH", rootfs+":"+rootfs+
+	os.Setenv("PATH", "/bin:/sbin:"+rootfs+":"+rootfs+
 		"/sbin:"+rootfs+"/bin")
 
-	cmd := exec.Command("rexec", specArgs...)
+	cmd := exec.Command(spec.Process.Args[0], spec.Process.Args[1:]...)
 
 	if goruntime.GOOS == "linux" {
 		// do chroot(2) in rexec-ed processes
@@ -176,7 +175,21 @@ func prepareUkontainer(context *cli.Context) error {
 			Chroot: rootfs,
 		}
 		cmd.Dir = "/"
-		cmd.Path = "/sbin/rexec"
+
+		binpath, err := exec.LookPath(spec.Process.Args[0])
+		if err != nil {
+			logrus.Errorf("cmd %s not found %s",
+				spec.Process.Args[0], err)
+			os.Setenv("PATH", "/bin:/sbin:/usr/bin:"+rootfs+":"+rootfs+
+				"/sbin:"+rootfs+"/bin")
+		}
+
+		if strings.HasPrefix(binpath, rootfs) {
+			cmd.Path = strings.Split(binpath, rootfs)[1]
+			logrus.Debugf("cmd %s found at %s=>%s",
+				spec.Process.Args[0], binpath, cmd.Path)
+		}
+
 	} else if goruntime.GOOS == "darwin" {
 		// XXX: because it's *hard* to create static-linked
 		// binary (rexec), we don't use chroot on OSX.  maybe
@@ -187,12 +200,13 @@ func prepareUkontainer(context *cli.Context) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+	cmd.ExtraFiles = fds
 
 	cwd, _ := os.Getwd()
 	logrus.Debugf("Starting command %s, Env=%s, cwd=%s, chroot=%s",
-		specArgs, cmd.Env, cwd, rootfs)
+		spec.Process.Args, cmd.Env, cwd, rootfs)
 	if err := cmd.Start(); err != nil {
-		logrus.Errorf("cmd error %s\n", err)
+		logrus.Errorf("cmd error %s (cmd=%s)", err, cmd)
 		panic(err)
 	}
 
@@ -226,6 +240,16 @@ func prepareUkontainer(context *cli.Context) error {
 		return fmt.Errorf("couldn't find pid %d", cmd.Process.Pid)
 	}
 	proc.Signal(syscall.Signal(syscall.SIGSTOP))
+
+	// XXX:
+	// os/exec.Start() close and open extrafiles thus strip O_NONBLOCK flag
+	// thus re-enable it here
+	for _, fd := range fds {
+		if err := syscall.SetNonblock(int(fd.Fd()), true); err != nil {
+			logrus.Errorf("setNonBlock %d error: %s\n", int(fd.Fd()), err)
+			panic(err)
+		}
+	}
 
 	return nil
 }

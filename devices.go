@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/sys/unix"
 )
 
@@ -65,4 +66,24 @@ func mknodDevice(dest string, node *Device) error {
 		return err
 	}
 	return unix.Chown(dest, int(node.Uid), int(node.Gid))
+}
+
+func openRootfsFd(file string) (*os.File) {
+	fd, err := os.OpenFile(file, os.O_RDWR, 0666)
+	if err != nil {
+		logrus.Errorf("open %s error: /dev/%s\n", file, err)
+		panic(err)
+	}
+
+	return fd
+}
+
+func openJsonFd(file string) (*os.File) {
+	fd, err := os.OpenFile(file, os.O_RDONLY, unix.S_IRUSR | unix.S_IWUSR)
+	if err != nil {
+		logrus.Errorf("open %s error: %s\n", file, err)
+		panic(err)
+	}
+
+	return fd
 }

@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/libos-nuse/runu.svg?branch=master)](https://travis-ci.org/libos-nuse/runu)
+[![Build Status](https://travis-ci.org/ukontainer/runu.svg?branch=master)](https://travis-ci.org/ukontainer/runu)
 [![Go Report Card](https://goreportcard.com/badge/github.com/libos-nuse/runu)](https://goreportcard.com/report/github.com/libos-nuse/runu)
 
 

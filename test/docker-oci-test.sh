@@ -30,9 +30,12 @@ docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 -e LKL_ROOTFS=imgs/python.
 fold_end test.docker.1
 
 # test python
+# XXX: PYTHONHASHSEED=1 is workaround for slow read of getrandom() on 4.19
+# (4.16 doesn't have such)
 fold_start test.docker.2 "docker python"
 docker run --rm -i -e RUMP_VERBOSE=1 -e LKL_OFFLOAD=1 \
  -e HOME=/ -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.img \
+ -e PYTHONHASHSEED=1 \
  --runtime=runu thehajime/runu-base:$DOCKER_IMG_VERSION \
  python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2

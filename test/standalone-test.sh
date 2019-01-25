@@ -57,10 +57,12 @@ run_test
 fold_end test.2
 
 # test python
+# XXX: PYTHONHASHSEED=1 is workaround for slow read of getrandom() on 4.19
+# (4.16 doesn't have such)
 fold_start test.3 "test python"
 cat config.json | \
     jq '.process.args |=["python", "-c", "print(\"hello world from python(runu)\")"] ' | \
-    jq '.process.env |= .+["LKL_ROOTFS=imgs/python.img", "RUMP_VERBOSE=1", "HOME=/", "PYTHONHOME=/python"]' > $HOME/tmp/bundle/config.json
+    jq '.process.env |= .+["LKL_ROOTFS=imgs/python.img", "RUMP_VERBOSE=1", "HOME=/", "PYTHONHOME=/python", "PYTHONHASHSEED=1"]' > $HOME/tmp/bundle/config.json
 run_test "immediate"
 fold_end test.3
 

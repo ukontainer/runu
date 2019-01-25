@@ -55,11 +55,14 @@ sudo killall -9 containerd-shim-v1-darwin | true
 fold_end test.containerd.2
 
 # test python
+# XXX: PYTHONHASHSEED=1 is workaround for slow read of getrandom() on 4.19
+# (4.16 doesn't have such)
 fold_start test.containerd.3 "test python"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     --env HOME=/ --env PYTHONHOME=/python \
     --env LKL_ROOTFS=imgs/python.img \
+    --env PYTHONHASHSEED=1 \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello2 \
     python -c "print(\"hello world from python(docker-runu)\")" &
 sleep 3

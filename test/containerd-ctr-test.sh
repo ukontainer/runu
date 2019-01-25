@@ -16,6 +16,9 @@ fold_end test.containerd.0 ""
 fold_start test.containerd.0 "boot containerd"
 curl https://gist.githubusercontent.com/thehajime/aba357f73da4e14bc3f5cbeb00aeaea4/raw/dde9af3f5ec40a3ec084064fd4baf0a26e09f51e/gistfile1.txt \
      -o /tmp/config.toml
+sed "s/501/$UID/" /tmp/config.toml > /tmp/a
+mv /tmp/a /tmp/config.toml
+sudo killall containerd || true
 containerd -l debug -c /tmp/config.toml &
 sleep 3
 killall containerd

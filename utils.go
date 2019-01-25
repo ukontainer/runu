@@ -164,8 +164,8 @@ func prepareUkontainer(context *cli.Context) error {
 	}
 
 	// call rexec
-	os.Setenv("PATH", "/bin:/sbin:"+rootfs+":"+rootfs+
-		"/sbin:"+rootfs+"/bin")
+	os.Setenv("PATH", rootfs+":"+rootfs+
+		"/sbin:"+rootfs+"/bin:/bin:/sbin:")
 
 	cmd := exec.Command(spec.Process.Args[0], spec.Process.Args[1:]...)
 

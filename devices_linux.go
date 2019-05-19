@@ -52,7 +52,7 @@ type ifReq struct {
 	Flags uint16
 }
 
-func openNetFd(ifname string, specEnv []string) (*os.File) {
+func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
 	var ifr ifReq
 	var vnet_hdr_sz int
 	var offload string
@@ -109,5 +109,5 @@ func openNetFd(ifname string, specEnv []string) (*os.File) {
 		}
 	}
 
-	return tapDev
+	return tapDev, true
 }

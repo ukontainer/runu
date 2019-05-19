@@ -17,6 +17,7 @@ const (
 	usage       = "runu run [ -b bundle ] <container-id>"
 	arch        = goruntime.GOARCH
 	pidFilePriv = "runu.pid"
+	pidFile9p   = "runu-9p.pid"
 )
 
 func main() {
@@ -48,6 +49,11 @@ func main() {
 			Value: "/run/runu",
 			Usage: "root directory for storage of container state (this should be located in tmpfs)",
 		},
+		cli.StringFlag{
+			Name:  "9ps",
+			Usage: "start 9pfs server",
+			Value: "",
+		},
 	}
 	app.Commands = []cli.Command{
 		createCommand,
@@ -61,6 +67,11 @@ func main() {
 	}
 
 	app.Before = func(context *cli.Context) error {
+		if rootfs := context.GlobalString("9ps") ; rootfs != "" {
+			logrus.Debugf("Runu called with args: %v\n", os.Args)
+			start9pfsServer(rootfs)
+			return nil
+		}
 		if path := context.GlobalString("log"); path != "" {
 			f, err := os.OpenFile(path,
 				os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC,

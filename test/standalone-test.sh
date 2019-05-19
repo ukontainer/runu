@@ -34,26 +34,24 @@ fold_end test.0
 
 run_test()
 {
-    flag=$1
+    bundle=$1
 
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root run --bundle=$HOME/tmp/bundle foo
+    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root run --bundle=$bundle foo
     sleep 5
-    if [ "$flag" != "immediate" ]; then
-        sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root kill foo 9
-    fi
+    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root kill foo 9 || true
     sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root delete foo
 }
 
 # test hello-world
 fold_start test.1 "test hello"
 cat config.json | jq '.process.args |=["hello"] ' > $HOME/tmp/bundle/config.json
-run_test "immediate"
+run_test $HOME/tmp/bundle
 fold_end test.1
 
 # test ping
 fold_start test.2 "test ping"
 cat config.json | jq '.process.args |=["ping","127.0.0.1"] ' > $HOME/tmp/bundle/config.json
-run_test
+run_test $HOME/tmp/bundle
 fold_end test.2
 
 # test python
@@ -63,7 +61,7 @@ fold_start test.3 "test python"
 cat config.json | \
     jq '.process.args |=["python", "-c", "print(\"hello world from python(runu)\")"] ' | \
     jq '.process.env |= .+["LKL_ROOTFS=imgs/python.img", "RUMP_VERBOSE=1", "HOME=/", "PYTHONHOME=/python", "PYTHONHASHSEED=1"]' > $HOME/tmp/bundle/config.json
-run_test "immediate"
+run_test $HOME/tmp/bundle
 fold_end test.3
 
 #test nginx
@@ -72,14 +70,9 @@ cat config.json | \
     jq '.process.args |=["nginx"]' | \
     jq '.process.env |= .+["LKL_ROOTFS=imgs/data.iso"]' \
     > $HOME/tmp/bundle/config.json
-RUMP_VERBOSE=1 run_test
+RUMP_VERBOSE=1 run_test $HOME/tmp/bundle
 fold_end test.4
 
-
-if [ $TRAVIS_OS_NAME != "linux" ] ; then
-    echo "alpine image test only supports on Linux host. Skipped"
-    exit 0
-fi
 
 # download alpine image
 fold_start test.0 "test alpine"
@@ -96,22 +89,10 @@ ls -lR $HOME/tmp/alpine/bundle/rootfs
 # prepare RUNU_AUX_DIR
 create_runu_aux_dir
 
-run_test_alpine()
-{
-    flag=$1
-
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root run --bundle=$HOME/tmp/alpine/bundle foo
-    sleep 5
-    if [ "$flag" != "immediate" ]; then
-        sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root kill foo 9
-    fi
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root delete foo
-}
-
 #test alpine
 cat config.json | \
-    jq '.process.args |=["ls", "-l", "/"]' | \
-    jq '.process.env |= .+["RUNU_AUX_DIR='$RUNU_AUX_DIR'"]' \
+    jq '.process.args |=["/bin/busybox","ls", "-l", "/"]' | \
+    jq '.process.env |= .+["RUNU_AUX_DIR='$RUNU_AUX_DIR'", "RUMP_VERBOSE=1"]' \
     > $HOME/tmp/alpine/bundle/config.json
-RUMP_VERBOSE=1 run_test_alpine "immediate"
+RUMP_VERBOSE=1 run_test $HOME/tmp/alpine/bundle
 fold_end test.0

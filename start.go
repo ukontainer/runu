@@ -4,10 +4,7 @@ import (
 	"fmt"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
-	"io/ioutil"
 	"os"
-	"path/filepath"
-	"strconv"
 	"syscall"
 )
 
@@ -29,17 +26,16 @@ var startCommand = cli.Command{
 }
 
 func resumeUkontainer(context *cli.Context, container string) error {
-	root := context.GlobalString("root")
-	pidFile := filepath.Join(root, container, pidFilePriv)
-	pid, _ := ioutil.ReadFile(pidFile)
-	pidI, _ := strconv.Atoi(string(pid))
-
+	// wake the process
+	pidI, err := readPidFile(context, pidFilePriv)
+	if err != nil {
+		return fmt.Errorf("couldn't find pid %d", pidI)
+	}
 	proc, err := os.FindProcess(pidI)
 	if err != nil {
 		return fmt.Errorf("couldn't find pid %d", pidI)
 	}
 
-	// wake the process
 	logrus.Debugf("proc %p, pid=%d", proc, pidI)
 	proc.Signal(syscall.Signal(syscall.SIGCONT))
 
@@ -51,6 +47,7 @@ func resumeUkontainer(context *cli.Context, container string) error {
 			if waitstatus.Signal() != syscall.SIGINT &&
 				waitstatus.Signal() != syscall.SIGTERM &&
 				!waitstatus.Exited() {
+				fmt.Printf("err %s\n", err)
 				panic(procStat)
 			}
 		}

@@ -32,6 +32,7 @@ fold_end test.containerd.0 ""
 # pull an image
 fold_start test.containerd.0 "pull image"
 ctr -a /tmp/ctrd/run/containerd/containerd.sock i pull docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION
+ctr -a /tmp/ctrd/run/containerd/containerd.sock i pull --platform=linux/amd64 docker.io/library/alpine:latest
 fold_end test.containerd.0 "pull image"
 
 # test hello-world
@@ -40,7 +41,7 @@ ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello0 hello &
 sleep 1
-sudo killall -9 containerd-shim-v1-darwin | true
+killall -9 ctr
 fold_end test.containerd.1
 
 # test ping
@@ -51,7 +52,7 @@ ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello1 \
     ping -c5 127.0.0.1 &
 sleep 6
-sudo killall -9 containerd-shim-v1-darwin | true
+killall -9 ctr
 fold_end test.containerd.2
 
 # test python
@@ -66,7 +67,7 @@ ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello2 \
     python -c "print(\"hello world from python(docker-runu)\")" &
 sleep 3
-sudo killall -9 containerd-shim-v1-darwin | true
+killall -9 ctr
 fold_end test.containerd.3
 
 # test nginx
@@ -77,5 +78,18 @@ ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION nginx1 \
     nginx &
 sleep 3
-sudo killall -9 containerd-shim-v1-darwin | true
+killall -9 ctr
 fold_end test.containerd.4
+
+# test alpine
+# prepare RUNU_AUX_DIR
+create_runu_aux_dir
+
+fold_start test.containerd.5 "test alpine Linux on darwin"
+ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
+    run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
+    --env RUNU_AUX_DIR=$RUNU_AUX_DIR \
+    docker.io/library/alpine:latest alpine1 /bin/busybox ls -l &
+sleep 3
+killall -9 ctr
+fold_end test.containerd.5

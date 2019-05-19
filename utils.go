@@ -1,15 +1,18 @@
 package main
 
 import (
+	"bufio"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"regexp"
 	goruntime "runtime"
 	"strconv"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
@@ -62,6 +65,23 @@ func checkArgs(context *cli.Context, expected, checkType int) error {
 	return nil
 }
 
+func readPidFile(context *cli.Context, pidFile string) (int, error) {
+	root := context.GlobalString("root")
+	container := context.Args().Get(0)
+	file := filepath.Join(root, container, pidFile)
+	pid, err := ioutil.ReadFile(file)
+	if err != nil {
+		return 0, err
+	}
+	pidI, err := strconv.Atoi(string(pid))
+	if err != nil {
+		return 0, err
+	}
+
+	return pidI, nil
+
+}
+
 func copyFile(src, dst string, mode os.FileMode) error {
 	b, err := ioutil.ReadFile(src)
 	if err != nil {
@@ -73,6 +93,27 @@ func copyFile(src, dst string, mode os.FileMode) error {
 		return err
 	}
 	return nil
+}
+
+func isAlpineImage(rootfs string) bool {
+	osRelease := rootfs + "/etc/os-release"
+
+	f, err := os.Open(osRelease)
+	if err != nil {
+                return false
+	}
+	defer f.Close()
+
+	scanner := bufio.NewScanner(f)
+	for scanner.Scan() {
+		matched, _ := regexp.MatchString("Alpine Linux",
+			scanner.Text())
+		if matched {
+			return true
+		}
+	}
+
+	return false
 }
 
 func changeLdso(spec *specs.Spec, rootfs string) error {
@@ -89,30 +130,38 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 		return err
 	}
 
+	// install frankenlibc-ed libc.so to the system one
+	if err := copyFile(runuAuxFileDir+"/lkick",
+		rootfs+"/bin/lkick", 0755); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func parseEnvs(spec *specs.Spec, rootfs string) ([]string, []*os.File) {
+func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string, map[*os.File]bool) {
 	specEnv := []string{}
-	fds := []*os.File{}
+	fds := map[*os.File]bool{}
 	fdNum := 3
+	hasRootFs := false
 
 	for _, env := range spec.Process.Env {
 		// look for LKL_ROOTFS env for .img/.iso files
 		if strings.HasPrefix(env, "LKL_ROOTFS=") {
 			lklRootfs := strings.TrimLeft(env, "LKL_ROOTFS=")
-			fd := openRootfsFd(rootfs+"/"+lklRootfs)
-			fds = append(fds, fd)
+			fd, nonblock := openRootfsFd(rootfs+"/"+lklRootfs)
+			fds[fd] = nonblock
 			specEnv = append(specEnv, FDINFO_ENV_PREFIX_ROOT+"=" + strconv.Itoa(fdNum))
 			fdNum++
+			hasRootFs = true
 			continue
 		}
 		// look for LKL_NET env for tap/macvtap devices
 		if strings.HasPrefix(env, "LKL_NET=") {
 			lklNet := strings.TrimLeft(env, "LKL_NET=")
 
-			fd := openNetFd(lklNet, spec.Process.Env)
-			fds = append(fds, fd)
+			fd, nonblock := openNetFd(lklNet, spec.Process.Env)
+			fds[fd] = nonblock
 			specEnv = append(specEnv, FDINFO_ENV_PREFIX_NET+lklNet+"=" + strconv.Itoa(fdNum))
 			fdNum++
 			continue
@@ -123,8 +172,8 @@ func parseEnvs(spec *specs.Spec, rootfs string) ([]string, []*os.File) {
 			copyFile(lklJson, rootfs+"/"+filepath.Base(lklJson), 0644)
 			lklJson = "/" + filepath.Base(lklJson)
 
-			fd := openJsonFd(rootfs+"/"+lklJson)
-			fds = append(fds, fd)
+			fd, nonblock := openJsonFd(rootfs+"/"+lklJson)
+			fds[fd] = nonblock
 			specEnv = append(specEnv, FDINFO_NAME_CONFIGJSON +"=" + strconv.Itoa(fdNum))
 			fdNum++
 			continue
@@ -137,6 +186,34 @@ func parseEnvs(spec *specs.Spec, rootfs string) ([]string, []*os.File) {
 		}
 	}
 
+	// start 9pfs server as a child process
+	// if there is no rootfs disk image
+	if !hasRootFs {
+		childArgs := []string{"--9ps=" + rootfs + "/"}
+		cmd := exec.Command(os.Args[0], childArgs[0:]...)
+		cmd.Stderr = os.Stderr
+		cmd.Stdout = os.Stdout
+		if err := cmd.Start(); err != nil {
+			panic(err)
+		}
+		// pid file for 9pfs server
+		root := context.GlobalString("root")
+		name := context.Args().Get(0)
+		pidf := filepath.Join(root, name, pidFile9p)
+		f, _ := os.OpenFile(pidf,
+			os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
+		_, _ = fmt.Fprintf(f, "%d", cmd.Process.Pid)
+		f.Close()
+		logrus.Debugf("Starting command %s, Env=%s, rootfs=%s\n",
+			cmd, cmd.Env, rootfs)
+
+		time.Sleep(100 * time.Millisecond)
+		fd, nonblock := connect9pfs()
+		fds[fd] = nonblock
+		specEnv = append(specEnv, "9PFS_FD=" + strconv.Itoa(fdNum))
+		fdNum++
+		specEnv = append(specEnv, "9PFS_MNT=/")
+	}
 
 	return specEnv, fds
 }
@@ -151,7 +228,7 @@ func prepareUkontainer(context *cli.Context) error {
 
 	rootfs, _ := filepath.Abs(spec.Root.Path)
 	// open fds to pass to main programs later
-	specEnv,fds := parseEnvs(spec, rootfs)
+	specEnv,fds := parseEnvs(spec, context, rootfs)
 
 	// fixup ldso to a pulled image
 	err = changeLdso(spec, rootfs)
@@ -168,43 +245,43 @@ func prepareUkontainer(context *cli.Context) error {
 		"/sbin:"+rootfs+"/bin:/bin:/sbin:")
 
 	cmd := exec.Command(spec.Process.Args[0], spec.Process.Args[1:]...)
-
-	if goruntime.GOOS == "linux" {
-		// do chroot(2) in rexec-ed processes
-		cmd.SysProcAttr = &syscall.SysProcAttr{
-			Chroot: rootfs,
-		}
-		cmd.Dir = "/"
-
-		binpath, err := exec.LookPath(spec.Process.Args[0])
-		if err != nil {
-			logrus.Errorf("cmd %s not found %s",
-				spec.Process.Args[0], err)
-			os.Setenv("PATH", "/bin:/sbin:/usr/bin:"+rootfs+":"+rootfs+
-				"/sbin:"+rootfs+"/bin")
-		}
-
-		if strings.HasPrefix(binpath, rootfs) {
-			cmd.Path = strings.Split(binpath, rootfs)[1]
-			logrus.Debugf("cmd %s found at %s=>%s",
-				spec.Process.Args[0], binpath, cmd.Path)
-		}
-
-	} else if goruntime.GOOS == "darwin" {
-		// XXX: because it's *hard* to create static-linked
-		// binary (rexec), we don't use chroot on OSX.  maybe
-		// eliminating rexec and do the job by runu should be better
-		cmd.Dir = rootfs
+	// XXX: need a better way to detect
+	if (isAlpineImage(rootfs) && goruntime.GOOS == "darwin") {
+		logrus.Debugf("This is alpine linux image")
+		cmd = exec.Command("/bin/lkick", spec.Process.Args[0:]...)
 	}
+
+	// do chroot(2) in rexec-ed processes
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Chroot: rootfs,
+	}
+	cmd.Dir = "/"
+
+	binpath, err := exec.LookPath(spec.Process.Args[0])
+	if err != nil {
+		logrus.Errorf("cmd %s not found %s",
+			spec.Process.Args[0], err)
+		os.Setenv("PATH", "/bin:/sbin:/usr/bin:"+rootfs+":"+rootfs+
+			"/sbin:"+rootfs+"/bin")
+	}
+
+	if strings.HasPrefix(binpath, rootfs) {
+		cmd.Path = strings.Split(binpath, rootfs)[1]
+		logrus.Debugf("cmd %s found at %s=>%s",
+			spec.Process.Args[0], binpath, cmd.Path)
+	}
+
 	cmd.Env = append(specEnv, "PATH=/bin:/sbin:"+os.Getenv("PATH"))
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
-	cmd.ExtraFiles = fds
+	for k := range fds {
+		cmd.ExtraFiles = append(cmd.ExtraFiles, k)
+	}
 
 	cwd, _ := os.Getwd()
 	logrus.Debugf("Starting command %s, Env=%s, cwd=%s, chroot=%s",
-		spec.Process.Args, cmd.Env, cwd, rootfs)
+		cmd.Args, cmd.Env, cwd, rootfs)
 	if err := cmd.Start(); err != nil {
 		logrus.Errorf("cmd error %s (cmd=%s)", err, cmd)
 		panic(err)
@@ -244,8 +321,8 @@ func prepareUkontainer(context *cli.Context) error {
 	// XXX:
 	// os/exec.Start() close and open extrafiles thus strip O_NONBLOCK flag
 	// thus re-enable it here
-	for _, fd := range fds {
-		if err := syscall.SetNonblock(int(fd.Fd()), true); err != nil {
+	for fd, nb_flag := range fds {
+		if err := syscall.SetNonblock(int(fd.Fd()), nb_flag); err != nil {
 			logrus.Errorf("setNonBlock %d error: %s\n", int(fd.Fd()), err)
 			panic(err)
 		}

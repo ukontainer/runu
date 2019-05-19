@@ -68,22 +68,22 @@ func mknodDevice(dest string, node *Device) error {
 	return unix.Chown(dest, int(node.Uid), int(node.Gid))
 }
 
-func openRootfsFd(file string) (*os.File) {
+func openRootfsFd(file string) (*os.File, bool) {
 	fd, err := os.OpenFile(file, os.O_RDWR, 0666)
 	if err != nil {
 		logrus.Errorf("open %s error: /dev/%s\n", file, err)
 		panic(err)
 	}
 
-	return fd
+	return fd, true
 }
 
-func openJsonFd(file string) (*os.File) {
+func openJsonFd(file string) (*os.File, bool) {
 	fd, err := os.OpenFile(file, os.O_RDONLY, unix.S_IRUSR | unix.S_IWUSR)
 	if err != nil {
 		logrus.Errorf("open %s error: %s\n", file, err)
 		panic(err)
 	}
 
-	return fd
+	return fd, true
 }

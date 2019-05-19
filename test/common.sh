@@ -23,6 +23,12 @@ create_runu_aux_dir() {
 	 -o /tmp/frankenlibc.tar.gz
     tar xfz /tmp/frankenlibc.tar.gz -C /tmp/
     cp /tmp/opt/rump/bin/rexec /tmp/rexec
+    cp /tmp/opt/rump/bin/lkick /tmp/lkick
+    if [ $TRAVIS_OS_NAME == "osx" ]; then
+	curl -L https://dl.bintray.com/libos-nuse/x86_64-rumprun-linux/linux/frankenlibc.tar.gz \
+	     -o /tmp/frankenlibc-linux.tar.gz
+	tar xfz /tmp/frankenlibc-linux.tar.gz -C /tmp opt/rump/lib/libc.so
+    fi
     if [ -f /tmp/opt/rump/lib/libc.so ] ; then
 	cp /tmp/opt/rump/lib/libc.so /tmp/libc.so
     fi

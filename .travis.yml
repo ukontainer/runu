@@ -17,6 +17,15 @@ matrix:
       before_install:
         - sudo apt-get install jq
     - os: osx
+      osx_image: xcode10.1
+      before_install:
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+        - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
+        - mkdir -p ~/.local/bin
+        - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
+        - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
+    - os: osx
+      osx_image: xcode10.2
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap

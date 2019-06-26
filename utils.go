@@ -144,6 +144,7 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 	fds := map[*os.File]bool{}
 	fdNum := 3
 	hasRootFs := false
+	use9pFs := false
 
 	for _, env := range spec.Process.Env {
 		// look for LKL_ROOTFS env for .img/.iso files
@@ -179,6 +180,11 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 			continue
 		}
 
+		// lookf for LKL_USE_9PFS
+		if strings.HasPrefix(env, "LKL_USE_9PFS=") {
+			use9pFs = true
+		}
+
 		// XXX: should exclude duplicated PATH variable in spec.Env since
 		// it eliminates following values
 		if !strings.HasPrefix(env, "PATH=") {
@@ -188,7 +194,7 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 
 	// start 9pfs server as a child process
 	// if there is no rootfs disk image
-	if !hasRootFs {
+	if !hasRootFs && use9pFs {
 		childArgs := []string{"--9ps=" + rootfs + "/"}
 		cmd := exec.Command(os.Args[0], childArgs[0:]...)
 		cmd.Stderr = os.Stderr

@@ -9,6 +9,7 @@ import (
 	"path/filepath"
 	"regexp"
 	goruntime "runtime"
+	"sort"
 	"strconv"
 	"strings"
 	"syscall"
@@ -281,8 +282,17 @@ func prepareUkontainer(context *cli.Context) error {
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
+
+	// XXX: need to sort cmd.Extrafiles to sync with frankenlibc
+	fdkeys := make([]*os.File, 0)
 	for k := range fds {
-		cmd.ExtraFiles = append(cmd.ExtraFiles, k)
+		fdkeys = append(fdkeys, k)
+	}
+	sort.SliceStable(fdkeys, func(i, j int) bool {
+		return fdkeys[i].Fd() < fdkeys[j].Fd()
+	})
+	for k, _ := range fdkeys {
+		cmd.ExtraFiles = append(cmd.ExtraFiles, fdkeys[k])
 	}
 
 	cwd, _ := os.Getwd()

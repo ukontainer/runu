@@ -85,5 +85,5 @@ func openJsonFd(file string) (*os.File, bool) {
 		panic(err)
 	}
 
-	return fd, true
+	return fd, false
 }

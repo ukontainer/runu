@@ -88,7 +88,7 @@ create_runu_aux_dir
 fold_start test.containerd.5 "test alpine Linux on darwin"
 ctr --debug -a /tmp/ctrd/run/containerd/containerd.sock \
     run --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1 \
-    --env RUNU_AUX_DIR=$RUNU_AUX_DIR \
+    --env RUNU_AUX_DIR=$RUNU_AUX_DIR --env LKL_USE_9PFS=1 \
     docker.io/library/alpine:latest alpine1 /bin/busybox ls -l &
 sleep 3
 killall -9 ctr

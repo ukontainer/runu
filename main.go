@@ -40,6 +40,11 @@ func main() {
 			Usage: "set the log file path where internal debug information is written",
 		},
 		cli.StringFlag{
+			Name:  "debug-log",
+			Usage: "set the log file path where debug information is written",
+			Value: "",
+		},
+		cli.StringFlag{
 			Name:  "log-format",
 			Value: "text",
 			Usage: "set the format used by logs ('text' (default), or 'json')",
@@ -80,6 +85,17 @@ func main() {
 				fmt.Printf("%s\n", err)
 				return err
 			}
+			logrus.SetOutput(f)
+		}
+		if path := context.GlobalString("debug-log"); path != "" {
+			f, err := os.OpenFile(path,
+				os.O_CREATE|os.O_WRONLY|os.O_APPEND|os.O_SYNC,
+				0666)
+			if err != nil {
+				fmt.Printf("%s\n", err)
+				return err
+			}
+			logrus.SetLevel(logrus.DebugLevel)
 			logrus.SetOutput(f)
 		}
 		if context.GlobalBool("debug") {

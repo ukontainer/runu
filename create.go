@@ -2,9 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"path/filepath"
+	"syscall"
 
 	"github.com/urfave/cli"
+	"github.com/sirupsen/logrus"
 )
 
 var createCommand = cli.Command{
@@ -38,6 +42,7 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 	container := context.Args().First()
 	ocffile := filepath.Join(bundle, specConfig)
 	spec, err := loadSpec(ocffile)
+	const stdioFdCount = 3
 
 	if err != nil {
 		return fmt.Errorf("load config failed: %v", err)
@@ -51,8 +56,79 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 		return fmt.Errorf("failed to create container: %v", err)
 	}
 
-	err = prepareUkontainer(context)
-	saveState("created", container, context)
+	// call `runu boot` to create new process
+	self, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("could not identify who am I: %v", err)
+	}
 
-	return err
+	args := []string{}
+	if val := context.GlobalString("log-format"); val != "" {
+		args = append(args, "-log-format")
+		args = append(args, context.GlobalString("log-format"))
+	}
+	if val := context.GlobalString("log"); val != "" {
+		args = append(args, "-log")
+		args = append(args, context.GlobalString("log"))
+	}
+	if val := context.GlobalString("root"); val != "" {
+		args = append(args, "-root")
+		args = append(args, context.GlobalString("root"))
+	}
+	args = append(args, "boot")
+	if val := context.String("bundle"); val != "" {
+		args = append(args, "-bundle")
+		args = append(args, context.String("bundle"))
+	}
+	if val := context.String("pid-file"); val != "" {
+		args = append(args, "-pid-file")
+		args = append(args, context.String("pid-file"))
+	}
+	args = append(args, container)
+
+	cmd := exec.Command(self, args...)
+
+	// wait for init complete
+	parentPipe, childPipe, err := os.Pipe()
+	if err != nil {
+		return fmt.Errorf("create: pipe failure (%s)", err)
+	}
+	cmd.ExtraFiles = append(cmd.ExtraFiles, childPipe)
+	cmd.Env = append(cmd.Env,
+		fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1),
+	)
+
+	cwd, _ := os.Getwd()
+	logrus.Debugf("Starting command %s, cwd=%s, root=%s",
+		cmd.Args, cwd, root)
+	cmd.Stdin = os.Stdin
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		Setpgid: false,
+	}
+
+	if err := cmd.Start(); err != nil {
+		panic(err)
+		return fmt.Errorf("cmd(boot) error %s (cmd=%s)", err, cmd)
+	}
+
+	go func() {
+		err = cmd.Wait()
+		if err != nil {
+			fmt.Printf("failed to wait a process: %s", cmd)
+			panic(err)
+		}
+	}()
+
+	buf := make([]byte, 1)
+	logrus.Debugf("Waiting for pipe to complete boot %s", cmd.Args)
+	if _, err := parentPipe.Read(buf); err != nil {
+		fmt.Printf("pipe read: %s", err)
+	}
+	parentPipe.Close()
+	childPipe.Close()
+	logrus.Debugf("Waiting pipe done")
+
+	return nil
 }

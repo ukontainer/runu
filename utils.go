@@ -225,12 +225,12 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 	return specEnv, fds
 }
 
-func prepareUkontainer(context *cli.Context) error {
-	name := context.Args().Get(0)
+func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
+	container := context.Args().Get(0)
 	spec, err := setupSpec(context)
 	if err != nil {
-		logrus.Warn("setupSepc err\n")
-		return err
+		logrus.Warn("setupSepc err %s\n", err)
+		return nil, err
 	}
 
 	rootfs, _ := filepath.Abs(spec.Root.Path)
@@ -261,6 +261,7 @@ func prepareUkontainer(context *cli.Context) error {
 	// do chroot(2) in rexec-ed processes
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Chroot: rootfs,
+		Setpgid: false,
 	}
 	cmd.Dir = "/"
 
@@ -303,22 +304,10 @@ func prepareUkontainer(context *cli.Context) error {
 		panic(err)
 	}
 
-	// write pid file
-	if pidf := context.String("pid-file"); pidf != "" {
-		// 0) pid file for containerd
-		f, err := os.OpenFile(pidf,
-			os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
-		if err != nil {
-			fmt.Printf("ERR: %s\n", err)
-			return err
-		}
-		_, _ = fmt.Fprintf(f, "%d", cmd.Process.Pid)
-		f.Close()
-
-	}
-	// 1) pid file for runu itself
+	// pid file for forked process from `runu create`
+	// it'll be used later by `runu start`
 	root := context.GlobalString("root")
-	pidf := filepath.Join(root, name, pidFilePriv)
+	pidf := filepath.Join(root, container, pidFilePriv)
 	f, _ := os.OpenFile(pidf,
 		os.O_RDWR|os.O_CREATE|os.O_EXCL|os.O_SYNC, 0666)
 
@@ -330,7 +319,7 @@ func prepareUkontainer(context *cli.Context) error {
 
 	proc, err := os.FindProcess(cmd.Process.Pid)
 	if err != nil {
-		return fmt.Errorf("couldn't find pid %d", cmd.Process.Pid)
+		return nil, fmt.Errorf("couldn't find pid %d", cmd.Process.Pid)
 	}
 	proc.Signal(syscall.Signal(syscall.SIGSTOP))
 
@@ -344,5 +333,5 @@ func prepareUkontainer(context *cli.Context) error {
 		}
 	}
 
-	return nil
+	return cmd, nil
 }

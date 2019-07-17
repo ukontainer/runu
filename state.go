@@ -37,8 +37,7 @@ func saveState(status string, container string, context *cli.Context) error {
 
 	spec, err := setupSpec(context)
 	if err != nil {
-		fmt.Printf("setupSepc err\n")
-		return err
+		return fmt.Errorf("setupSepc err: %v", err)
 	}
 
 	rootfs, _ := filepath.Abs(spec.Root.Path)
@@ -71,11 +70,6 @@ func createContainer(container, bundle, stateRoot string, spec *specs.Spec) erro
 		fmt.Printf("%s\n", err.Error())
 		return err
 	}
-	defer func() {
-		if err != nil {
-			os.RemoveAll(stateDir)
-		}
-	}()
 
 	return nil
 }

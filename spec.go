@@ -79,8 +79,7 @@ func setupSpec(context *cli.Context) (*specs.Spec, error) {
 	bundle := context.String("bundle")
 	if bundle != "" {
 		if err := os.Chdir(bundle); err != nil {
-			fmt.Printf("error: dir not found (%s)\n", bundle)
-			return nil, err
+			return nil, fmt.Errorf("spec: dir not found (bundle=%s,%v)", bundle, err)
 		}
 	}
 	spec, err := loadSpec(specConfig)

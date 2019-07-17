@@ -39,23 +39,5 @@ func resumeUkontainer(context *cli.Context, container string) error {
 	logrus.Debugf("proc %p, pid=%d", proc, pidI)
 	proc.Signal(syscall.Signal(syscall.SIGCONT))
 
-	// catch child errors if possible
-	go func() {
-		procStat, _ := proc.Wait()
-		if procStat != nil {
-			waitstatus := procStat.Sys().(syscall.WaitStatus)
-			if waitstatus.Signal() != syscall.SIGINT &&
-				waitstatus.Signal() != syscall.SIGTERM &&
-				!waitstatus.Exited() {
-				fmt.Printf("err %s\n", err)
-				panic(procStat)
-			}
-		}
-		if procStat == nil {
-			logrus.Debugf("no process to wait. non-child process? (%d)",
-				pidI)
-		}
-	}()
-
 	return nil
 }

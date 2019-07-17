@@ -9,6 +9,28 @@ import (
 	"syscall"
 )
 
+func killFromPidFile(context *cli.Context, pidFile string, signal int) error {
+	pid, err := readPidFile(context, pidFile)
+	if err != nil {
+		// logrus.Warnf("couldn't find pid %d(%s)", pidI, err)
+		return nil
+	}
+
+	proc, err := os.FindProcess(pid)
+	if err != nil {
+		logrus.Infof("couldn't find pid %d(%s)", pid, err)
+		return err
+	}
+
+	err = proc.Signal(syscall.Signal(signal))
+	if err != nil {
+		logrus.Warnf("couldn't signal to pid %d(%s)", pid, err)
+		return err
+	}
+
+	return nil
+}
+
 var killCommand = cli.Command{
 	Name:      "kill",
 	ArgsUsage: `<container-id>`,
@@ -27,38 +49,15 @@ var killCommand = cli.Command{
 		signal, _ := strconv.Atoi(context.Args().Get(1))
 
 		// kill 9pfs server
-		pidI, err := readPidFile(context, pidFile9p)
-		if err != nil {
-			logrus.Warnf("couldn't find 9pfs server pid %d(%s)", pidI, err)
-		}
-		proc, err := os.FindProcess(pidI)
-		if err != nil {
-			logrus.Warnf("couldn't find 9pfs server pid %d(%s)", pidI, err)
-		}
-		err = proc.Signal(syscall.SIGTERM)
-		logrus.Warnf("killing 9pfs %d %s", syscall.SIGTERM, err)
-		if err != nil {
-			logrus.Warnf("killing 9pfs error %s", err)
-		}
-		err = proc.Signal(syscall.Signal(signal))
-		logrus.Warnf("killing 9pfs %d %s", signal, err)
+		err := killFromPidFile(context, pidFile9p, signal)
 		if err != nil {
 			logrus.Warnf("killing 9pfs error %s", err)
 		}
 
 		// kill main process
-		pidI, err = readPidFile(context, pidFilePriv)
+		err = killFromPidFile(context, pidFilePriv, signal)
 		if err != nil {
-			logrus.Warnf("couldn't find pid %d(%s)", pidI, err)
-		}
-		proc, err = os.FindProcess(pidI)
-		if err != nil {
-			logrus.Warnf("couldn't find pid %d(%s)", pidI, err)
-		}
-		err = proc.Signal(syscall.Signal(signal))
-		if err != nil {
-			logrus.Warnf("couldn't signal to pid %d(%s)",
-				pidI, err)
+			logrus.Warnf("killing main process error %s", err)
 		}
 
 		saveState("stopped", container, context)

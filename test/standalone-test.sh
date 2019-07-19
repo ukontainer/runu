@@ -81,10 +81,8 @@ mkdir -p $HOME/tmp/alpine/bundle/rootfs/dev
 bash /tmp/download-frozen-image-v2.sh /tmp/alpine alpine:latest
 for layer in `find /tmp/alpine -name layer.tar`
 do
- tar xvfz $layer -C $HOME/tmp/alpine/bundle/rootfs
+ tar xfz $layer -C $HOME/tmp/alpine/bundle/rootfs
 done
-
-ls -lR $HOME/tmp/alpine/bundle/rootfs
 
 # prepare RUNU_AUX_DIR
 create_runu_aux_dir
@@ -92,7 +90,7 @@ create_runu_aux_dir
 #test alpine
 cat config.json | \
     jq '.process.args |=["/bin/busybox","ls", "-l", "/"]' | \
-    jq '.process.env |= .+["RUNU_AUX_DIR='$RUNU_AUX_DIR'", "RUMP_VERBOSE=1"]' \
+    jq '.process.env |= .+["RUNU_AUX_DIR='$RUNU_AUX_DIR'", "RUMP_VERBOSE=1", "LKL_USE_9PFS=1"]' \
     > $HOME/tmp/alpine/bundle/config.json
 RUMP_VERBOSE=1 run_test $HOME/tmp/alpine/bundle
 fold_end test.0

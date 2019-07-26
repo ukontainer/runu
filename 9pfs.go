@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	"io"
-	"os"
 	"net"
+	"os"
 
 	p9p "github.com/docker/go-p9p"
 	"github.com/docker/go-p9p/ufs"
@@ -14,6 +14,8 @@ import (
 const (
 	addr9p = "127.0.0.1:5640"
 )
+
+type contextKey string
 
 // 9pfs client side
 func connect9pfs() (*os.File, bool) {
@@ -30,7 +32,7 @@ func connect9pfs() (*os.File, bool) {
 
 	fd, err := conn.File()
 	if err != nil {
-		logrus.Errorf("File() %s error: %s\n", conn, err)
+		logrus.Errorf("File() %s error: %s\n", conn.RemoteAddr(), err)
 		panic(err)
 	}
 
@@ -46,7 +48,6 @@ func start9pfsServer(path string) {
 	l, err := net.Listen("tcp", addr9p)
 	if err != nil {
 		panic(err)
-		return
 	}
 	defer l.Close()
 
@@ -54,11 +55,10 @@ func start9pfsServer(path string) {
 		c, err := l.Accept()
 		if err != nil {
 			panic(err)
-			continue
 		}
 
 		go func(conn net.Conn) {
-			ctx := context.WithValue(ctx, "conn", conn)
+			ctx := context.WithValue(ctx, contextKey("conn"), conn)
 			session, err := ufs.NewSession(ctx, path)
 			if err != nil {
 				logrus.Println("error creating session", err)

@@ -14,8 +14,8 @@ import (
 )
 
 var bootCommand = cli.Command{
-	Name:      "boot",
-	Usage:     "(internal use only) boot a container",
+	Name:  "boot",
+	Usage: "(internal use only) boot a container",
 	Flags: []cli.Flag{
 		cli.StringFlag{
 			Name:  "bundle, b",
@@ -70,7 +70,7 @@ func bootContainer(context *cli.Context, attach bool) error {
 
 	// notify to `runu create`
 	pipe := os.NewFile(uintptr(pipefd), "pipe")
-	logrus.Debugf("writing pipe %s _LIBCONTAINER_INITPIPE=%s", pipe, envInitPipe)
+	logrus.Debugf("writing pipe %s _LIBCONTAINER_INITPIPE=%s", pipe.Name(), envInitPipe)
 	pipe.Write([]byte("1"))
 	pipe.Close()
 

@@ -7,8 +7,8 @@ import (
 	"path/filepath"
 	"syscall"
 
-	"github.com/urfave/cli"
 	"github.com/sirupsen/logrus"
+	"github.com/urfave/cli"
 )
 
 var createCommand = cli.Command{
@@ -110,13 +110,12 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 
 	if err := cmd.Start(); err != nil {
 		panic(err)
-		return fmt.Errorf("cmd(boot) error %s (cmd=%s)", err, cmd)
 	}
 
 	go func() {
 		err = cmd.Wait()
 		if err != nil {
-			fmt.Printf("failed to wait a process: %s", cmd)
+			fmt.Printf("failed to wait a process: %s", cmd.Args)
 			panic(err)
 		}
 	}()

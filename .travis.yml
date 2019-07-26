@@ -33,10 +33,16 @@ matrix:
         - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
-before_install:
-  - go vet ./...
+before_script:
+  - go get -u github.com/gojp/goreportcard/cmd/goreportcard-cli
+  - go get -u github.com/alecthomas/gometalinter
+  - go get -u github.com/gordonklaus/ineffassign
+  - go get -u github.com/fzipp/gocyclo
+  - go get -u github.com/client9/misspell/cmd/misspell
+  - go get -u golang.org/x/lint/golint
 
 script:
+  - goreportcard-cli -t 100.0 -v
   - bash -ex test/standalone-test.sh
   - bash -ex test/docker-oci-test.sh
   - bash -ex test/containerd-ctr-test.sh

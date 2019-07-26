@@ -27,11 +27,11 @@ const (
 )
 
 var (
-	runuAuxFileDir = "/usr/local/lib/runu"
-	FDINFO_NAME_CONFIGJSON =  "__RUMP_FDINFO_CONFIGJSON"
-	FDINFO_ENV_PREFIX_NET = "__RUMP_FDINFO_NET_"
-	FDINFO_ENV_PREFIX_DISK =  "__RUMP_FDINFO_DISK_"
-	FDINFO_ENV_PREFIX_ROOT = "__RUMP_FDINFO_ROOT"
+	runuAuxFileDir      = "/usr/local/lib/runu"
+	fdInfoConfigJson    = "__RUMP_FDINFO_CONFIGJSON"
+	fdInfoEnvPrefixNet  = "__RUMP_FDINFO_NET_"
+	fdInfoEnvPrefixDisk = "__RUMP_FDINFO_DISK_"
+	fdInfoEnvPrefixRoot = "__RUMP_FDINFO_ROOT"
 )
 
 func checkArgs(context *cli.Context, expected, checkType int) error {
@@ -101,7 +101,7 @@ func isAlpineImage(rootfs string) bool {
 
 	f, err := os.Open(osRelease)
 	if err != nil {
-                return false
+		return false
 	}
 	defer f.Close()
 
@@ -151,9 +151,9 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 		// look for LKL_ROOTFS env for .img/.iso files
 		if strings.HasPrefix(env, "LKL_ROOTFS=") {
 			lklRootfs := strings.TrimLeft(env, "LKL_ROOTFS=")
-			fd, nonblock := openRootfsFd(rootfs+"/"+lklRootfs)
+			fd, nonblock := openRootfsFd(rootfs + "/" + lklRootfs)
 			fds[fd] = nonblock
-			specEnv = append(specEnv, FDINFO_ENV_PREFIX_ROOT+"=" + strconv.Itoa(fdNum))
+			specEnv = append(specEnv, fdInfoEnvPrefixRoot+"="+strconv.Itoa(fdNum))
 			fdNum++
 			hasRootFs = true
 			continue
@@ -164,7 +164,7 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 
 			fd, nonblock := openNetFd(lklNet, spec.Process.Env)
 			fds[fd] = nonblock
-			specEnv = append(specEnv, FDINFO_ENV_PREFIX_NET+lklNet+"=" + strconv.Itoa(fdNum))
+			specEnv = append(specEnv, fdInfoEnvPrefixNet+lklNet+"="+strconv.Itoa(fdNum))
 			fdNum++
 			continue
 		}
@@ -174,9 +174,9 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 			copyFile(lklJson, rootfs+"/"+filepath.Base(lklJson), 0644)
 			lklJson = "/" + filepath.Base(lklJson)
 
-			fd, nonblock := openJsonFd(rootfs+"/"+lklJson)
+			fd, nonblock := openJsonFd(rootfs + "/" + lklJson)
 			fds[fd] = nonblock
-			specEnv = append(specEnv, FDINFO_NAME_CONFIGJSON +"=" + strconv.Itoa(fdNum))
+			specEnv = append(specEnv, fdInfoConfigJson+"="+strconv.Itoa(fdNum))
 			fdNum++
 			continue
 		}
@@ -212,13 +212,12 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 		_, _ = fmt.Fprintf(f, "%d", cmd.Process.Pid)
 		f.Close()
 		logrus.Debugf("Starting command %s, Env=%s, rootfs=%s\n",
-			cmd, cmd.Env, rootfs)
+			cmd.Args, cmd.Env, rootfs)
 
 		time.Sleep(100 * time.Millisecond)
 		fd, nonblock := connect9pfs()
 		fds[fd] = nonblock
-		specEnv = append(specEnv, "9PFS_FD=" + strconv.Itoa(fdNum))
-		fdNum++
+		specEnv = append(specEnv, "9PFS_FD="+strconv.Itoa(fdNum))
 		specEnv = append(specEnv, "9PFS_MNT=/")
 	}
 
@@ -229,13 +228,13 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 	container := context.Args().Get(0)
 	spec, err := setupSpec(context)
 	if err != nil {
-		logrus.Warn("setupSepc err %s\n", err)
+		logrus.Warnf("setupSepc err %s\n", err)
 		return nil, err
 	}
 
 	rootfs, _ := filepath.Abs(spec.Root.Path)
 	// open fds to pass to main programs later
-	specEnv,fds := parseEnvs(spec, context, rootfs)
+	specEnv, fds := parseEnvs(spec, context, rootfs)
 
 	// fixup ldso to a pulled image
 	err = changeLdso(spec, rootfs)
@@ -253,14 +252,14 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 
 	cmd := exec.Command(spec.Process.Args[0], spec.Process.Args[1:]...)
 	// XXX: need a better way to detect
-	if (isAlpineImage(rootfs) && goruntime.GOOS == "darwin") {
+	if isAlpineImage(rootfs) && goruntime.GOOS == "darwin" {
 		logrus.Debugf("This is alpine linux image")
 		cmd = exec.Command("/bin/lkick", spec.Process.Args[0:]...)
 	}
 
 	// do chroot(2) in rexec-ed processes
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Chroot: rootfs,
+		Chroot:  rootfs,
 		Setpgid: false,
 	}
 	cmd.Dir = "/"
@@ -292,7 +291,7 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 	sort.SliceStable(fdkeys, func(i, j int) bool {
 		return fdkeys[i].Fd() < fdkeys[j].Fd()
 	})
-	for k, _ := range fdkeys {
+	for k := range fdkeys {
 		cmd.ExtraFiles = append(cmd.ExtraFiles, fdkeys[k])
 	}
 
@@ -300,7 +299,7 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 	logrus.Debugf("Starting command %s, Env=%s, cwd=%s, chroot=%s",
 		cmd.Args, cmd.Env, cwd, rootfs)
 	if err := cmd.Start(); err != nil {
-		logrus.Errorf("cmd error %s (cmd=%s)", err, cmd)
+		logrus.Errorf("cmd error %s (cmd=%s)", err, cmd.Args)
 		panic(err)
 	}
 
@@ -326,8 +325,8 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 	// XXX:
 	// os/exec.Start() close and open extrafiles thus strip O_NONBLOCK flag
 	// thus re-enable it here
-	for fd, nb_flag := range fds {
-		if err := syscall.SetNonblock(int(fd.Fd()), nb_flag); err != nil {
+	for fd, nbFlag := range fds {
+		if err := syscall.SetNonblock(int(fd.Fd()), nbFlag); err != nil {
 			logrus.Errorf("setNonBlock %d error: %s\n", int(fd.Fd()), err)
 			panic(err)
 		}

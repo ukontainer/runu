@@ -28,26 +28,11 @@ var (
 )
 
 func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
-	tapDev, err := os.OpenFile("/dev/"+ifname, os.O_RDWR | unix.O_NONBLOCK, 0666)
+	tapDev, err := os.OpenFile("/dev/"+ifname, os.O_RDWR|unix.O_NONBLOCK, 0666)
 	if err != nil {
 		logrus.Errorf("open %s error: /dev/%s\n", ifname, err)
 		panic(err)
 	}
-
-	/* XXX: no way to non-block ? */
-	/*
-	on := 1
-
-	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
-		uintptr(tapDev.Fd()),
-		uintptr(unix.FIONBIO),
-		uintptr(unsafe.Pointer(&on)),
-	)
-	if errno != 0 {
-		panic(errno)
-	}
-	*/
-
 
 	return tapDev, true
 }

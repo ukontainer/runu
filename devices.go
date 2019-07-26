@@ -79,7 +79,7 @@ func openRootfsFd(file string) (*os.File, bool) {
 }
 
 func openJsonFd(file string) (*os.File, bool) {
-	fd, err := os.OpenFile(file, os.O_RDONLY, unix.S_IRUSR | unix.S_IWUSR)
+	fd, err := os.OpenFile(file, os.O_RDONLY, unix.S_IRUSR|unix.S_IWUSR)
 	if err != nil {
 		logrus.Errorf("open %s error: %s\n", file, err)
 		panic(err)

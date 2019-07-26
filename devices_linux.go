@@ -38,13 +38,10 @@ var (
 )
 
 const (
-	TUN_DEVICE = "/dev/net/tun"
-	TUN_F_CSUM = 0x01
-	TUN_F_TSO4 = 0x02
-	TUN_F_TSO6 = 0x04
-	TUN_F_TSO_ECN =0x08
-	TUN_F_UFO = 0x10
-	virtio_net_hdr_size = 12
+	tunDevice        = "/dev/net/tun"
+	tunFCsum         = 0x01
+	tunFTso4         = 0x02
+	virtioNetHdrSize = 12
 )
 
 type ifReq struct {
@@ -54,7 +51,7 @@ type ifReq struct {
 
 func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
 	var ifr ifReq
-	var vnet_hdr_sz int
+	var vnetHdrSz int
 	var offload string
 
 	for _, v := range specEnv {
@@ -64,9 +61,9 @@ func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
 		}
 	}
 
-	tapDev, err := os.OpenFile(TUN_DEVICE, os.O_RDWR | unix.O_NONBLOCK, 0666)
+	tapDev, err := os.OpenFile(tunDevice, os.O_RDWR|unix.O_NONBLOCK, 0666)
 	if err != nil {
-		logrus.Errorf("open %s error: %s\n", TUN_DEVICE, err)
+		logrus.Errorf("open %s error: %s\n", tunDevice, err)
 		panic(err)
 	}
 
@@ -75,7 +72,7 @@ func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
 
 	if offload != "" {
 		ifr.Flags |= syscall.IFF_VNET_HDR
-		vnet_hdr_sz = virtio_net_hdr_size
+		vnetHdrSz = virtioNetHdrSize
 	}
 
 	_, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
@@ -92,17 +89,17 @@ func openNetFd(ifname string, specEnv []string) (*os.File, bool) {
 		_, _, errno := syscall.Syscall(syscall.SYS_IOCTL,
 			uintptr(tapDev.Fd()),
 			uintptr(syscall.TUNSETVNETHDRSZ),
-			uintptr(unsafe.Pointer(&vnet_hdr_sz)),
+			uintptr(unsafe.Pointer(&vnetHdrSz)),
 		)
 		if errno != 0 {
 			panic(errno)
 		}
 
-		tap_arg := TUN_F_CSUM | TUN_F_TSO4
+		tapArg := tunFCsum | tunFTso4
 		_, _, errno = syscall.Syscall(syscall.SYS_IOCTL,
 			uintptr(tapDev.Fd()),
 			uintptr(syscall.TUNSETOFFLOAD),
-			uintptr(tap_arg),
+			uintptr(tapArg),
 		)
 		if errno != 0 {
 			panic(errno)

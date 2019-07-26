@@ -40,4 +40,5 @@ script:
   - bash -ex test/standalone-test.sh
   - bash -ex test/docker-oci-test.sh
   - bash -ex test/containerd-ctr-test.sh
+  - bash -ex test/docker-dockerd-test.sh
 

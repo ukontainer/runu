@@ -1,6 +1,6 @@
 language: go
 go:
-  - "1.10.x"
+  - "1.11.x"
 
 cache:
   directories:
@@ -46,4 +46,5 @@ script:
   - bash -ex test/standalone-test.sh
   - bash -ex test/docker-oci-test.sh
   - bash -ex test/containerd-ctr-test.sh
+  - bash -ex test/docker-dockerd-test.sh
 

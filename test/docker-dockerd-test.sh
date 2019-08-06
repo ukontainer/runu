@@ -61,5 +61,5 @@ fold_start test.dockerd.0 "docker hello"
 fold_end test.dockerd.0 ""
 
 fold_start test.dockerd.1 "test ping"
-    docker $DOCKER_ARGS thehajime/runu-base:0.1 ping 127.0.0.1
+    docker $DOCKER_ARGS thehajime/runu-base:0.1 ping -c 5 127.0.0.1
 fold_end test.dockerd.1 ""

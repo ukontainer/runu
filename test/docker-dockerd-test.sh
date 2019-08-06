@@ -7,7 +7,7 @@ fi
 
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-DOCKER_ARGS="--rm -e UMP_VERBOSE=1  -e DEBUG=1 --runtime=runu-dev --net=none"
+DOCKER_ARGS="run --rm -e RUMP_VERBOSE=1  -e DEBUG=1 --runtime=runu-dev --net=none"
 
 # prepare RUNU_AUX_DIR
 create_runu_aux_dir

@@ -52,6 +52,9 @@ fold_start test.dockerd.0 "boot dockerd"
     sudo ln -s /tmp/var/run/docker.sock /var/run/docker.sock
 fold_end test.dockerd.0 ""
 
+# build docker (client)
+go get github.com/docker/cli
+
 # test hello-world
 fold_start test.dockerd.0 "docker hello"
     docker $DOCKER_ARGS --platform=linux/amd64 thehajime/runu-base:0.1 hello

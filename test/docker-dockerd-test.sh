@@ -45,9 +45,10 @@ sudo cp /tmp/containerd-config-dockerd/daemon.json /etc/docker/
 
 # prepare dockerd
 fold_start test.dockerd.0 "boot dockerd"
-    sudo dockerd --config-file /etc/docker/daemon.json --containerd /tmp/ctrd/run/containerd/containerd.sock
+    sudo dockerd --config-file /etc/docker/daemon.json --containerd /tmp/ctrd/run/containerd/containerd.sock &
     sudo chmod 666 /tmp/var/run/docker.sock
     sudo chmod 777 /tmp/var/run/
+    sudo ln -s /tmp/var/run/docker.sock /var/run/docker.sock
 fold_end test.dockerd.0 ""
 
 # test hello-world

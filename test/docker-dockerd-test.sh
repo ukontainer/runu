@@ -53,7 +53,7 @@ fold_start test.dockerd.0 "boot dockerd"
 fold_end test.dockerd.0 ""
 
 # build docker (client)
-go get github.com/docker/cli
+go get github.com/docker/cli/cmd/docker
 
 # test hello-world
 fold_start test.dockerd.0 "docker hello"

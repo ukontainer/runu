@@ -26,8 +26,8 @@ fold_end test.containerd.0 ""
 
 # prepare containerd
 fold_start test.containerd.0 "boot containerd"
-    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config
-    cp /tmp/containerd-config/config.toml /tmp/
+    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config-dockerd
+    cp /tmp/containerd-config-dockerd/config.toml /tmp/
     sed "s/501/$UID/" /tmp/config.toml > /tmp/a
     mv /tmp/a /tmp/config.toml
 

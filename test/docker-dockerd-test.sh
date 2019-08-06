@@ -16,12 +16,12 @@ create_runu_aux_dir
 (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
     jq '.runtimes.runu |= {"path":"'${TRAVIS_HOME}'/gopath/bin/runu","runtimeArgs":[]}' | \
     tee /tmp/tmp.json
+sudo mkdir -p /etc/docker/
 sudo mv /tmp/tmp.json /etc/docker/daemon.json
-sudo service docker restart
 
 # build custom containerd
 fold_start test.containerd.0 "containerd build"
-HOMEBREW_NO_AUTO_UPDATE=1 brew install libos-nuse/lkl/containerd
+HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/containerd
 fold_end test.containerd.0 ""
 
 # prepare containerd
@@ -44,7 +44,7 @@ fold_end test.containerd.0 ""
 
 #build custom dockerd
 fold_start test.dockerd.0 "dockerd build"
-HOMEBREW_NO_AUTO_UPDATE=1 brew install libos-nuse/lkl/dockerd-darwin
+HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
 fold_end test.dockerd.0 ""
 
 # prepare dockerd

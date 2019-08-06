@@ -39,7 +39,6 @@ fold_start test.containerd.0 "boot containerd"
     sudo containerd -l debug -c /tmp/config.toml &
     sleep 3
     chmod 755 /tmp/ctrd
-    ls -lRa /tmp/ctrd
 fold_end test.containerd.0 ""
 
 #build custom dockerd

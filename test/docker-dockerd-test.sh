@@ -57,9 +57,9 @@ go get github.com/docker/cli/cmd/docker
 
 # test hello-world
 fold_start test.dockerd.0 "docker hello"
-    docker $DOCKER_ARGS --platform=linux/amd64 thehajime/runu-base:0.1 hello
+    docker $DOCKER_ARGS thehajime/runu-base:0.1 hello
 fold_end test.dockerd.0 ""
 
 fold_start test.dockerd.1 "test ping"
-    docker $DOCKER_ARGS --platform=linux/amd64 thehajime/runu-base:0.1 ping 127.0.0.1
+    docker $DOCKER_ARGS thehajime/runu-base:0.1 ping 127.0.0.1
 fold_end test.dockerd.1 ""

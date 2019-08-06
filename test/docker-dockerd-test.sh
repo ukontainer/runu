@@ -31,7 +31,7 @@ fold_start test.containerd.0 "boot containerd"
     sed "s/501/$UID/" /tmp/config.toml > /tmp/a
     mv /tmp/a /tmp/config.toml
 
-    mkdir /tmp/containerd-shim
+    mkdir -p /tmp/containerd-shim
     sudo killall containerd || true
     containerd -l debug -c /tmp/config.toml &
     sleep 3

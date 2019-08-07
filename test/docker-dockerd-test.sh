@@ -24,6 +24,7 @@ fold_end test.dockerd.0 ""
 
 # update daemon.json for dockerd
 sudo mkdir -p /etc/docker/
+git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config-dockerd
 sudo cp /tmp/containerd-config-dockerd/daemon.json /etc/docker/
 
 # prepare dockerd

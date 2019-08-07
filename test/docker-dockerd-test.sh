@@ -17,23 +17,6 @@ fold_start test.containerd.0 "containerd build"
 HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/containerd
 fold_end test.containerd.0 ""
 
-# prepare containerd
-fold_start test.containerd.0 "boot containerd"
-    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config-dockerd
-    cp /tmp/containerd-config-dockerd/config.toml /tmp/
-    sed "s/501/$UID/" /tmp/config.toml > /tmp/a
-    mv /tmp/a /tmp/config.toml
-
-    mkdir -p /tmp/containerd-shim
-    sudo killall containerd || true
-    containerd -l debug -c /tmp/config.toml &
-    sleep 3
-    killall containerd
-    sudo containerd -l debug -c /tmp/config.toml &
-    sleep 3
-    chmod 755 /tmp/ctrd
-fold_end test.containerd.0 ""
-
 #build custom dockerd
 fold_start test.dockerd.0 "dockerd build"
 HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
@@ -45,7 +28,7 @@ sudo cp /tmp/containerd-config-dockerd/daemon.json /etc/docker/
 
 # prepare dockerd
 fold_start test.dockerd.0 "boot dockerd"
-    sudo dockerd --config-file /etc/docker/daemon.json --containerd /tmp/ctrd/run/containerd/containerd.sock &
+    sudo dockerd --config-file /etc/docker/daemon.json &
     sleep 3
     sudo chmod 666 /tmp/var/run/docker.sock
     sudo chmod 777 /tmp/var/run/

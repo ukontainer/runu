@@ -12,12 +12,18 @@ env:
 matrix:
   include:
     - os: linux
+      cache:
+        directories:
+          - $HOME/.cache/go-build
       dist: trusty
       sudo: required
       before_install:
         - sudo apt-get install jq
     - os: osx
       osx_image: xcode10.1
+      cache:
+        directories:
+          - $HOME/Library/Caches/go-build
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
@@ -27,6 +33,9 @@ matrix:
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
     - os: osx
       osx_image: xcode10.2
+      cache:
+        directories:
+          - $HOME/Library/Caches/go-build
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap

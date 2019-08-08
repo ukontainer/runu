@@ -10,11 +10,6 @@ fi
 CTR_ARGS="--rm --runtime=io.containerd.runtime.v1.linux --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
 CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock"
 
-# build custom containerd
-fold_start test.containerd.0 "containerd build"
-HOMEBREW_NO_AUTO_UPDATE=1 brew install libos-nuse/lkl/containerd
-fold_end test.containerd.0 ""
-
 # prepare containerd
 fold_start test.containerd.0 "boot containerd"
     git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config

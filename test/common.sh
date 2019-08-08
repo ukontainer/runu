@@ -18,6 +18,12 @@ create_osx_chroot() {
 }
 
 create_runu_aux_dir() {
+    export RUNU_AUX_DIR="/tmp"
+
+    if [ -a /tmp/lkick ] ; then
+	return
+    fi
+
     # download pre-built frankenlibc
     curl -L https://dl.bintray.com/libos-nuse/x86_64-rumprun-linux/$TRAVIS_OS_NAME/frankenlibc.tar.gz \
 	 -o /tmp/frankenlibc.tar.gz
@@ -32,6 +38,4 @@ create_runu_aux_dir() {
     if [ -f /tmp/opt/rump/lib/libc.so ] ; then
 	cp /tmp/opt/rump/lib/libc.so /tmp/libc.so
     fi
-
-    export RUNU_AUX_DIR="/tmp"
 }

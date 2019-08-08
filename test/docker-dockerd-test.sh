@@ -12,16 +12,6 @@ DOCKER_ARGS="run --rm -e RUMP_VERBOSE=1  -e DEBUG=1 --runtime=runu-dev --net=non
 # prepare RUNU_AUX_DIR
 create_runu_aux_dir
 
-# build custom containerd
-fold_start test.containerd.0 "containerd build"
-HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/containerd
-fold_end test.containerd.0 ""
-
-#build custom dockerd
-fold_start test.dockerd.0 "dockerd build"
-HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
-fold_end test.dockerd.0 ""
-
 # update daemon.json for dockerd
 sudo mkdir -p /etc/docker/
 git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config-dockerd

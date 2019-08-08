@@ -26,7 +26,7 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
     # prepare dockerd
     mkdir -p /tmp/containerd-shim
     sudo killall containerd || true
-    sudo dockerd --config-file /etc/docker/daemon.json &
+    sudo dockerd --config-file /etc/docker/daemon.json > $HOME/dockerd.log 2>&1 &
     sleep 3
     sudo chmod 666 /tmp/var/run/docker.sock
     sudo chmod 777 /tmp/var/run/

@@ -22,7 +22,7 @@ fold_start test.containerd.0 "boot containerd"
     containerd -l debug -c /tmp/config.toml &
     sleep 3
     killall containerd
-    sudo containerd -l debug -c /tmp/config.toml &
+    sudo containerd -l debug -c /tmp/config.toml > $HOME/containerd.log 2>&1 &
     sleep 3
     chmod 755 /tmp/ctrd
 fold_end test.containerd.0 ""

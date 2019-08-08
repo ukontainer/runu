@@ -58,3 +58,6 @@ script:
   - bash -ex test/docker-oci-test.sh
   - bash -ex test/containerd-ctr-test.sh
 
+after_failure:
+  - cat $HOME/dockerd.log
+  - cat $HOME/containerd.log

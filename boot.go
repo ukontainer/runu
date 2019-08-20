@@ -77,6 +77,12 @@ func bootContainer(context *cli.Context, attach bool) error {
 	// catch child errors if possible
 	err = cmd.Wait()
 
+	// stop 9pfs server
+	err9 := killFromPidFile(context, pidFile9p, 15)
+	if err9 != nil {
+		logrus.Warnf("killing 9pfs error %s", err9)
+	}
+
 	// signal to containerd-shim to request exit
 	bundle := context.String("bundle")
 	file := filepath.Join(bundle, "shim.pid")

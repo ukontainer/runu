@@ -74,31 +74,24 @@ CID=`docker $DOCKER_RUN_ARGS -d \
     docker kill $CID
 fold_end test.docker.3
 
-docker_alpine_run() {
-    cmd_argv=$*
-
-    if [ $TRAVIS_OS_NAME = "linux" ] ; then
-	docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-	       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $cmd_argv
-    elif [ $TRAVIS_OS_NAME = "osx" ] ; then
-	# XXX: df -ha gives core dumps. remove this once fixed
-	if [ "$cmd_argv" = "df -ha" ] ; then
-	    return
-	fi
-	CID=`docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-	       -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine /bin/busybox $cmd_argv`
-	sleep 2
-	docker logs $CID
-	docker kill $CID
-    fi
-}
-
 
 # alipine image test
 fold_start test.docker.4 "docker alpine"
-    docker_alpine_run uname -a
-    docker_alpine_run ping -c 5 127.0.0.1
-    docker_alpine_run dmesg
-    docker_alpine_run ls -l /
-    docker_alpine_run df -ha
+    docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine uname -a
+
+    docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ping -c 5 127.0.0.1
+
+    docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine dmesg | head
+
+    docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ls -l /
+
+    if [ $TRAVIS_OS_NAME = "linux" ] ; then
+        # XXX: df -ha gives core dumps. remove this once fixed
+        docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
+               -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine df -ha
+    fi
 fold_end test.docker.4

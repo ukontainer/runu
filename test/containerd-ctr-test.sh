@@ -79,8 +79,5 @@ create_runu_aux_dir
 fold_start test.containerd.5 "test alpine Linux on darwin"
     ctr $CTR_GLOBAL_OPT run $CTR_ARGS \
         --env RUNU_AUX_DIR=$RUNU_AUX_DIR --env LKL_USE_9PFS=1 \
-        docker.io/library/alpine:latest alpine1 /bin/busybox ls -l &
-    # XXX: fork/execve is still buggy not to properly exit (and hungs)
-    sleep 3
-    killall -9 ctr
+        docker.io/library/alpine:latest alpine1 /bin/busybox ls -l
 fold_end test.containerd.5

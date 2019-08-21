@@ -35,8 +35,7 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
     # build docker (client)
     go get github.com/docker/cli/cmd/docker
 
-    # XXX: docker run alpine stucks on macos: remove -d once it fixed
-    DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1 --detach"
+    DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1"
 fi
 fold_end test.dockerd.0 ""
 

@@ -36,6 +36,9 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
     go get github.com/docker/cli/cmd/docker
 
     DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1"
+    # XXX: this is required when we use 9pfs rootfs (e.g., on mac)
+    # see #3 issue more detail https://github.com/ukontainer/runu/issues/3
+    ALPINE_PREFIX="/bin/busybox"
 fi
 fold_end test.dockerd.0 ""
 
@@ -77,20 +80,21 @@ fold_end test.docker.3
 # alipine image test
 fold_start test.docker.4 "docker alpine"
     docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine uname -a
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX uname -a
 
     docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ping -c 5 127.0.0.1
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX \
+           ping -c 5 127.0.0.1
 
     docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine dmesg | head
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX dmesg | head
 
     docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine ls -l /
+           -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX ls -l /
 
     if [ $TRAVIS_OS_NAME = "linux" ] ; then
-        # XXX: df -ha gives core dumps. remove this once fixed
+        # XXX: df -ha gives core dumps. remove above if statement this once fixed
         docker $DOCKER_RUN_ARGS $DOCKER_RUN_EXT_ARGS \
-               -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine df -ha
+               -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX df -ha
     fi
 fold_end test.docker.4

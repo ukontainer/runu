@@ -126,9 +126,16 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 
 	// XXX: only for alpine
 	// install frankenlibc-ed libc.so to the system one
-	if err := copyFile(runuAuxFileDir+"/libc.so",
-		rootfs+"/lib/ld-musl-x86_64.so.1", 0755); err != nil {
-		return err
+	if goruntime.GOARCH == "amd64" {
+		if err := copyFile(runuAuxFileDir+"/libc.so",
+			rootfs+"/lib/ld-musl-x86_64.so.1", 0755); err != nil {
+			return err
+		}
+	} else if goruntime.GOARCH == "arm" {
+		if err := copyFile(runuAuxFileDir+"/libc.so",
+			rootfs+"/lib/ld-musl-armhf.so.1", 0755); err != nil {
+			return err
+		}
 	}
 
 	// install frankenlibc-ed libc.so to the system one

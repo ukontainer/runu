@@ -5,6 +5,10 @@ mkdir -p /tmp/runu-root
 
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
+# XX: Linux use env_reset in /etc/sudoers
+if [ $TRAVIS_OS_NAME = "linux" ] ; then
+    sudo ln -s `which runu` /usr/bin/runu
+fi
 
 fold_start test.0 "preparation test"
 # get script from moby
@@ -13,7 +17,7 @@ curl https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-
 
 # get image runu-base
 mkdir -p /tmp/runu
-bash /tmp/download-frozen-image-v2.sh /tmp/runu/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME
+bash /tmp/download-frozen-image-v2.sh /tmp/runu/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME-$ARCH
 
 # extract images from layers
 for layer in `find /tmp/runu -name layer.tar`
@@ -36,10 +40,10 @@ run_test()
 {
     bundle=$1
 
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root run --bundle=$bundle foo
+    sudo runu --debug --root=/tmp/runu-root run --bundle=$bundle foo
     sleep 5
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root kill foo 9 || true
-    sudo $GOPATH/bin/runu --debug --root=/tmp/runu-root delete foo
+    sudo runu --debug --root=/tmp/runu-root kill foo 9 || true
+    sudo runu --debug --root=/tmp/runu-root delete foo
 }
 
 # test hello-world

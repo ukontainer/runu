@@ -2,7 +2,7 @@
 
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-DOCKER_RUN_ARGS="run --rm -i -e RUMP_VERBOSE=1  -e DEBUG=1 --runtime=runu-dev --net=none"
+DOCKER_RUN_ARGS="run --rm -i -e RUMP_VERBOSE=1 -e DEBUG=1 --runtime=runu-dev --net=none $DOCKER_RUN_ARGS_ARCH"
 
 # prepare RUNU_AUX_DIR
 create_runu_aux_dir
@@ -12,7 +12,8 @@ fold_start test.dockerd.0 "boot dockerd"
 if [ $TRAVIS_OS_NAME = "linux" ] ; then
 
     (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
-        jq '.runtimes."runu-dev" |= {"path":"'${TRAVIS_HOME}'/gopath/bin/runu","runtimeArgs":[]}' | \
+        jq '.runtimes."runu-dev" |= {"path":"'${TRAVIS_HOME}'/gopath/bin/'${RUNU_PATH}'runu","runtimeArgs":[]}' | \
+        jq '. |= .+{"experimental":true}' | \
         tee /tmp/tmp.json
     sudo mv /tmp/tmp.json /etc/docker/daemon.json
     sudo service docker restart

@@ -1,0 +1,14 @@
+#!/bin/sh
+set -e
+
+echo "Configuring daemon.json ..."
+
+if [ ! -s /etc/docker/daemon.json ] ; then
+    sudo mv -f /etc/docker/daemon.json /etc/docker/daemon.json.org || true
+fi
+
+(sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
+    jq '.runtimes."runu" |= {"path":"/usr/bin/runu","runtimeArgs":[]}' > \
+    /tmp/tmp.json
+
+sudo mv /tmp/tmp.json /etc/docker/daemon.json

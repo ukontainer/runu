@@ -1,0 +1,6 @@
+Package: docker-runu
+Version: __VERSION__
+Depends: libc6, jq
+Architecture: __ARCH__
+Maintainer: Hajime Tazaki <thehajime@gmail.com>
+Description: runu OCI runtime for docker with upload to Bintray repository using Travis CI (Build date: __DATE__)

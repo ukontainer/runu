@@ -1,0 +1,30 @@
+{
+	"package": {
+		"name": "__NAME__",
+		"repo": "__REPO_NAME__",
+		"subject": "__SUBJECT__"
+	},
+
+	"version": {
+		"name": "__VERSION__",
+		"desc": "__NAME__ __VERSION__ by __SUBJECT__"
+	},
+
+	"licenses": ["__LICENSE__"],
+	"desc": "Debian package built and deployed completely automatically",
+
+	"files": [
+		{
+			"includePattern": "./(.[^/]*(\\.deb)$)",
+			"uploadPattern": "$1",
+			"matrixParams": {
+				"deb_distribution": "unstable",
+				"deb_component": "main",
+				"deb_architecture": "__ARCH__"
+			}
+		}
+	],
+
+	"publish": true,
+	"override": false
+}

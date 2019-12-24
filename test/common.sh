@@ -3,9 +3,11 @@
 
 fold_start() {
   echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
+  travis_time_start
 }
 
 fold_end() {
+  travis_time_finish
   echo -e "\ntravis_fold:end:$1\r"
 }
 

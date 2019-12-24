@@ -69,6 +69,10 @@ matrix:
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
 before_script:
+  - export -f travis_nanoseconds
+  - export -f travis_fold
+  - export -f travis_time_start
+  - export -f travis_time_finish
   - export GO111MODULE=auto
   - go get -u github.com/gojp/goreportcard/cmd/goreportcard-cli
   - go get -u github.com/alecthomas/gometalinter
@@ -83,9 +87,9 @@ before_script:
 
 script:
   - if [ $TRAVIS_ARCH = "amd64" ] && [ $TRAVIS_OS_NAME = "linux" ] ; then GO111MODULE=on goreportcard-cli -t 100.0 -v ; fi
-  - bash -ex test/standalone-test.sh
-  - bash -ex test/docker-oci-test.sh
-  - bash -ex test/containerd-ctr-test.sh
+  - bash -e test/standalone-test.sh
+  - bash -e test/docker-oci-test.sh
+  - bash -e test/containerd-ctr-test.sh
 
 after_failure:
   - cat /tmp/dockerd.log

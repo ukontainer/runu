@@ -1,5 +1,7 @@
 #!/bin/sh
 
+. $(dirname "${BASH_SOURCE[0]}")/../test/common.sh
+
 # Prepare supplement files for runu
 curl -L \
      https://dl.bintray.com/ukontainer/ukontainer/$TRAVIS_OS_NAME/$ARCH/frankenlibc.tar.gz \

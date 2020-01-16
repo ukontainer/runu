@@ -75,6 +75,9 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 		args = append(args, "-root")
 		args = append(args, context.GlobalString("root"))
 	}
+	if context.GlobalBool("debug") {
+		args = append(args, "-debug")
+	}
 	args = append(args, "boot")
 	if val := context.String("bundle"); val != "" {
 		args = append(args, "-bundle")

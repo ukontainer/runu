@@ -76,6 +76,9 @@ func bootContainer(context *cli.Context, attach bool) error {
 
 	// catch child errors if possible
 	err = cmd.Wait()
+	if err != nil {
+		logrus.Warnf("wait error %s", err)
+	}
 
 	// stop 9pfs server
 	err9 := killFromPidFile(context, pidFile9p, 15)

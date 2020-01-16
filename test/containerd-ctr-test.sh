@@ -1,18 +1,21 @@
 #!/bin/bash
 
+. $(dirname "${BASH_SOURCE[0]}")/common.sh
+
 if [ $TRAVIS_OS_NAME != "osx" ] ; then
     echo "containerd and ctr runtime test only support with osx host. Skipped"
     exit 0
 fi
 
-. $(dirname "${BASH_SOURCE[0]}")/common.sh
-
 CTR_ARGS="--rm --runtime=io.containerd.runtime.v1.linux --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
 CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock"
 
+sudo rm -rf /tmp/ctrd/
+
 # prepare containerd
 fold_start test.containerd.0 "boot containerd"
-    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config
+    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git \
+	/tmp/containerd-config || true
     cp /tmp/containerd-config/config.toml /tmp/
     sed "s/501/$UID/" /tmp/config.toml > /tmp/a
     mv /tmp/a /tmp/config.toml
@@ -22,7 +25,7 @@ fold_start test.containerd.0 "boot containerd"
     containerd -l debug -c /tmp/config.toml &
     sleep 3
     killall containerd
-    sudo containerd -l debug -c /tmp/config.toml > $HOME/containerd.log 2>&1 &
+    sudo containerd -l debug -c /tmp/config.toml > /tmp/containerd.log 2>&1 &
     sleep 3
     chmod 755 /tmp/ctrd
 fold_end test.containerd.0 ""

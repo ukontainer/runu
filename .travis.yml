@@ -8,7 +8,6 @@ cache:
 
 env:
   global:
-  - DOCKER_IMG_VERSION=0.2
   - PACKAGE_NAME=docker-runu
   - RELEASE_VERSION=0.2
   - BINTRAY_REPO_NAME=debian
@@ -24,7 +23,6 @@ matrix:
           - $HOME/.cache/go-build
       sudo: required
       env:
-        - ARCH=amd64
         - DEB_ARCH=amd64
       before_install:
         - sudo apt-get install jq
@@ -35,7 +33,6 @@ matrix:
       arch: arm64
       sudo: required
       env:
-        - ARCH=arm
         - CC=arm-linux-gnueabihf-gcc
         - DEB_ARCH=armhf
         - RUNU_PATH="linux_arm/"
@@ -51,8 +48,6 @@ matrix:
       cache:
         directories:
           - $HOME/Library/Caches/go-build
-      env:
-        - ARCH=amd64
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
@@ -65,8 +60,6 @@ matrix:
       cache:
         directories:
           - $HOME/Library/Caches/go-build
-      env:
-        - ARCH=amd64
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
         - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
@@ -95,9 +88,9 @@ script:
   - bash -ex test/containerd-ctr-test.sh
 
 after_failure:
-  - cat $HOME/dockerd.log
-  - cat $HOME/containerd.log
-  - cat $HOME/docker-manifest.log
+  - cat /tmp/dockerd.log
+  - cat /tmp/containerd.log
+  - cat /tmp/docker-manifest.log
 
 
 ## bintray package deploy

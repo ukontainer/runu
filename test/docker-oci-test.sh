@@ -21,7 +21,8 @@ if [ $TRAVIS_OS_NAME = "linux" ] ; then
 elif [ $TRAVIS_OS_NAME = "osx" ] ; then
 
     sudo mkdir -p /etc/docker/
-    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git /tmp/containerd-config-dockerd
+    git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git \
+	/tmp/containerd-config-dockerd || true
     sudo cp /tmp/containerd-config-dockerd/daemon.json /etc/docker/
 
     # prepare dockerd
@@ -31,10 +32,12 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
     sleep 3
     sudo chmod 666 /tmp/var/run/docker.sock
     sudo chmod 777 /tmp/var/run/
-    sudo ln -s /tmp/var/run/docker.sock /var/run/docker.sock
+    sudo ln -sf /tmp/var/run/docker.sock /var/run/docker.sock
 
     # build docker (client)
-    go get github.com/docker/cli/cmd/docker
+    if [ -z "$(which docker)" ] ; then
+	go get github.com/docker/cli/cmd/docker
+    fi
 
     DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1"
     # XXX: this is required when we use 9pfs rootfs (e.g., on mac)

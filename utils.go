@@ -261,28 +261,32 @@ func prepareUkontainer(context *cli.Context) (*exec.Cmd, error) {
 	// XXX: need a better way to detect
 	if isAlpineImage(rootfs) && goruntime.GOOS == "darwin" {
 		logrus.Debugf("This is alpine linux image")
-		cmd = exec.Command("/bin/lkick", spec.Process.Args[0:]...)
+		cmd = exec.Command("lkick", spec.Process.Args[0:]...)
 	}
 
 	// do chroot(2) in rexec-ed processes
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		Chroot:  rootfs,
 		Setpgid: false,
 	}
 	cmd.Dir = "/"
 
-	binpath, err := exec.LookPath(spec.Process.Args[0])
-	if err != nil {
-		logrus.Errorf("cmd %s not found %s",
-			spec.Process.Args[0], err)
-		os.Setenv("PATH", "/bin:/sbin:/usr/bin:"+rootfs+":"+rootfs+
-			"/sbin:"+rootfs+"/bin")
-	}
+	// on Linux, libc.so is replaced in a chrooted directory
+	if goruntime.GOOS == "linux" {
+		cmd.SysProcAttr.Chroot = rootfs
 
-	if strings.HasPrefix(binpath, rootfs) {
-		cmd.Path = strings.Split(binpath, rootfs)[1]
-		logrus.Debugf("cmd %s found at %s=>%s",
-			spec.Process.Args[0], binpath, cmd.Path)
+		binpath, err := exec.LookPath(spec.Process.Args[0])
+		if err != nil {
+			logrus.Errorf("cmd %s not found %s",
+				spec.Process.Args[0], err)
+			os.Setenv("PATH", "/bin:/sbin:/usr/bin:"+rootfs+":"+rootfs+
+				"/sbin:"+rootfs+"/bin")
+		}
+
+		if strings.HasPrefix(binpath, rootfs) {
+			cmd.Path = strings.Split(binpath, rootfs)[1]
+			logrus.Debugf("cmd %s found at %s=>%s",
+				spec.Process.Args[0], binpath, cmd.Path)
+		}
 	}
 
 	cmd.Env = append(specEnv, "PATH=/bin:/sbin:"+os.Getenv("PATH"))

@@ -158,6 +158,15 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 		// look for LKL_ROOTFS env for .img/.iso files
 		if strings.HasPrefix(env, "LKL_ROOTFS=") {
 			lklRootfs := strings.TrimLeft(env, "LKL_ROOTFS=")
+
+			// if a file exists in local/host, copy and use it
+			if _, err := os.Stat(lklRootfs); err == nil {
+				copyFile(lklRootfs,
+					rootfs+"/"+filepath.Base(lklRootfs),
+					0644)
+				lklRootfs = "/" + filepath.Base(lklRootfs)
+			}
+
 			fd, nonblock := openRootfsFd(rootfs + "/" + lklRootfs)
 			fds[fd] = nonblock
 			specEnv = append(specEnv, fdInfoEnvPrefixRoot+"="+strconv.Itoa(fdNum))

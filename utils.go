@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io/ioutil"
+	"net"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -147,12 +149,117 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 	return nil
 }
 
+type lklInterface struct {
+	MacAddr   string `json:"mac,omitempty"`
+	V4Addr    string `json:"ip"`
+	V4MaskLen string `json:"masklen"`
+	V6Addr    string `json:"ipv6,omitempty"`
+	V6MaskLen string `json:"masklen6,omitempty"`
+	Name      string `json:"name"`
+	Iftype    string `json:"type"`
+	Offload   string `json:"offload,omitempty"`
+}
+
+type lklConfig struct {
+	V4Gateway  string         `json:"gateway,omitempty"`
+	Interfaces []lklInterface `json:"interfaces,omitempty"`
+	Debug      string         `json:"debug,omitempty"`
+	DelayMain  string         `json:"delay_main,omitempty"`
+	SingleCpu  string         `json:"singlecpu,omitempty"`
+	Sysctl     string         `json:"sysctl,omitempty"`
+}
+
+type lklIfInfo struct {
+	ifAddrs []net.IPNet
+	ifName  string
+}
+
+func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (*lklIfInfo, error) {
+	var config lklConfig
+
+	// IPv4 address
+	ifInfo, err := setupNetwork(spec)
+	if err != nil {
+		return nil, fmt.Errorf("failed to parse ipv4/ipv6 address: (%s)", err)
+	}
+
+	if ifInfo == nil {
+		logrus.Warnf("no interface detected")
+		*lklJsonOut = lklJson
+		return nil, nil
+	}
+
+	logrus.Debugf(ifInfo.ifAddrs[0].String())
+
+	v4masklen, _ := ifInfo.ifAddrs[0].Mask.Size()
+	v4addr := ifInfo.ifAddrs[0].IP
+	v4addr = v4addr.To4()
+
+	v4gw := make(net.IP, len(v4addr))
+	copy(v4gw, v4addr)
+	// XXX: need to obtain from namespace
+	v4gw = v4gw.To4()
+	v4gw[2] = 0
+	v4gw[3] = 1
+
+	// read user-specified file
+	if lklJson != "" {
+		bytes, err := ioutil.ReadFile(lklJson)
+		if err != nil {
+			logrus.Errorf("failed to read JSON file: %s (%s)",
+				lklJson, err)
+			panic(err)
+		}
+
+		// decode json
+		if err := json.Unmarshal(bytes, &config); err != nil {
+			logrus.Errorf("failed to decode JSON file: %s (%s)",
+				lklJson, err)
+			panic(err)
+		}
+
+		// only replace IPv4 address when the address is written
+		// with "AUTO": otherwise use user-specified address
+		if len(config.Interfaces) > 0 {
+			if config.Interfaces[0].V4Addr == "AUTO" {
+				config.Interfaces[0].V4Addr = v4addr.String()
+				config.Interfaces[0].V4MaskLen = strconv.Itoa(v4masklen)
+				config.V4Gateway = v4gw.String()
+			}
+		}
+	} else {
+		config = lklConfig{
+			Debug: "1",
+		}
+		config.Interfaces = append(config.Interfaces,
+			lklInterface{
+				V4Addr:    v4addr.String(),
+				V4MaskLen: strconv.Itoa(v4masklen),
+				Name:      ifInfo.ifName,
+				Iftype:    "rumpfd",
+			})
+		config.V4Gateway = v4gw.String()
+	}
+
+	outJson, err := json.MarshalIndent(config, "", "    ")
+	if err != nil {
+		logrus.Errorf("failed to encode JSON file: %s (%s)",
+			lklJson, err)
+		panic(err)
+	}
+
+	ioutil.WriteFile(*lklJsonOut, outJson, os.ModePerm)
+
+	return ifInfo, nil
+}
+
 func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string, map[*os.File]bool) {
 	specEnv := []string{}
 	fds := map[*os.File]bool{}
 	fdNum := 3
 	hasRootFs := false
 	use9pFs := false
+	lklJson := ""
 
 	for _, env := range spec.Process.Env {
 		// look for LKL_ROOTFS env for .img/.iso files
@@ -186,14 +293,10 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 		}
 		// look for LKL_CONFIG env for json file
 		if strings.HasPrefix(env, "LKL_CONFIG=") {
-			lklJson := strings.TrimLeft(env, "LKL_CONFIG=")
+			lklJson = strings.TrimLeft(env, "LKL_CONFIG=")
 			copyFile(lklJson, rootfs+"/"+filepath.Base(lklJson), 0644)
-			lklJson = "/" + filepath.Base(lklJson)
+			lklJson = rootfs + "/" + filepath.Base(lklJson)
 
-			fd, nonblock := openJsonFd(rootfs + "/" + lklJson)
-			fds[fd] = nonblock
-			specEnv = append(specEnv, fdInfoConfigJson+"="+strconv.Itoa(fdNum))
-			fdNum++
 			continue
 		}
 
@@ -207,6 +310,36 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 		if !strings.HasPrefix(env, "PATH=") {
 			specEnv = append(specEnv, env)
 		}
+	}
+
+	// Set IPv4 addr/route from CNI info
+	// and configure as lkl-$(container-id)-out.json file
+	container := context.Args().First()
+	clen := 10
+	if len(container) < 10 {
+		clen = len(container)
+	}
+	lklJsonOut := rootfs + "/" + "lkl-" + container[:clen] + "-out.json"
+
+	ifInfo, err := generateLklJsonFile(lklJson, &lklJsonOut, spec)
+	if err != nil {
+		panic(err)
+	}
+
+	// XXX: eth0 should be somewhere else
+	if ifInfo != nil {
+		lklNet := "eth0"
+		fd, nonblock := openNetFd(lklNet, spec.Process.Env)
+		fds[fd] = nonblock
+		specEnv = append(specEnv, fdInfoEnvPrefixNet+lklNet+"="+strconv.Itoa(fdNum))
+		fdNum++
+	}
+
+	if lklJsonOut != "" {
+		fd, nonblock := openJsonFd(lklJsonOut)
+		fds[fd] = nonblock
+		specEnv = append(specEnv, fdInfoConfigJson+"="+strconv.Itoa(fdNum))
+		fdNum++
 	}
 
 	// start 9pfs server as a child process

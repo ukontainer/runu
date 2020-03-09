@@ -116,3 +116,4 @@ deploy:
 
 after_deploy:
   - bash -ex pkg/post-deploy-deb.sh
+  - bash -ex pkg/post-deploy-kind-img.sh

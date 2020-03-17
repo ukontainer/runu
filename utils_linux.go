@@ -26,8 +26,17 @@ func getVethHost() net.Interface {
 	return lastIf
 }
 
+// XXX: Only treat ipv4 information
 func getVethInfo(spec *specs.Spec) (*lklIfInfo, error) {
 	ifInfo := new(lklIfInfo)
+
+	// default gateway
+	v4gw, err := netlink.RouteGet(net.ParseIP("8.8.8.8"))
+	if err != nil {
+		return nil, fmt.Errorf("Could not determine single default route (got %v)",
+			len(v4gw))
+	}
+	ifInfo.v4Gw = v4gw[0].Gw
 
 	ifaces, _ := net.Interfaces()
 	logrus.Debugf("ifaces= %+v", ifaces)

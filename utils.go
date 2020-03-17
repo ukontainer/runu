@@ -172,6 +172,7 @@ type lklConfig struct {
 type lklIfInfo struct {
 	ifAddrs []net.IPNet
 	ifName  string
+	v4Gw    net.IP
 }
 
 func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (*lklIfInfo, error) {
@@ -194,13 +195,7 @@ func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (
 	v4masklen, _ := ifInfo.ifAddrs[0].Mask.Size()
 	v4addr := ifInfo.ifAddrs[0].IP
 	v4addr = v4addr.To4()
-
-	v4gw := make(net.IP, len(v4addr))
-	copy(v4gw, v4addr)
-	// XXX: need to obtain from namespace
-	v4gw = v4gw.To4()
-	v4gw[2] = 0
-	v4gw[3] = 1
+	v4gw := ifInfo.v4Gw.To4()
 
 	// read user-specified file
 	if lklJson != "" {

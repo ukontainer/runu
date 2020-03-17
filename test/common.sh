@@ -87,9 +87,9 @@ PNAME=$(uname -m)
 if [ -z $ARCH ] ; then
     if [ $PNAME = "x86_64" ] ; then
 	ARCH="amd64"
-    elif [ $PNAME = "aarch64" ] ; then
-	ARCH="arm"
-    elif [ $PNAME = "armv7l" ] ; then
+    elif [ $DEB_ARCH = "arm64" ] ; then
+	ARCH="arm64"
+    elif [ $DEB_ARCH = "armhf" ] ; then
 	ARCH="arm"
     fi
 fi

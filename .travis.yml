@@ -1,3 +1,4 @@
+dist: bionic
 language: go
 go:
   - "1.12.x"
@@ -15,13 +16,12 @@ env:
   - BINTRAY_LICENSE=Apache-2.0
   - GO111MODULE=on
 
-matrix:
+jobs:
   include:
     - os: linux
       cache:
         directories:
           - $HOME/.cache/go-build
-      sudo: required
       env:
         - DEB_ARCH=amd64
       before_install:
@@ -31,18 +31,28 @@ matrix:
         directories:
           - $HOME/.cache/go-build
       arch: arm64
-      sudo: required
       env:
-        - CC=arm-linux-gnueabihf-gcc
         - DEB_ARCH=armhf
-        - RUNU_PATH="linux_arm/"
-        - DOCKER_RUN_ARGS_ARCH="--platform=linux/arm"
       before_install:
         - sudo dpkg --add-architecture armhf
         - sudo apt-get update && sudo apt-get install jq libc6:armhf crossbuild-essential-armhf
+        - export CC=arm-linux-gnueabihf-gcc
         - export CGO_ENABLED=1
         - export GOARCH=arm
+        - export RUNU_PATH="linux_arm/"
         - export PATH=$GOPATH/bin/linux_arm:$PATH
+        - export DOCKER_RUN_ARGS_ARCH="--platform=linux/arm"
+    - os: linux
+      cache:
+        directories:
+          - $HOME/.cache/go-build
+      arch: arm64
+      env:
+        - DEB_ARCH=arm64
+      before_install:
+        - sudo apt-get update && sudo apt-get install jq
+        - export CGO_ENABLED=1
+        - export GOARCH=arm64
     - os: osx
       osx_image: xcode10.1
       cache:

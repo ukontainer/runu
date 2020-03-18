@@ -138,6 +138,11 @@ func changeLdso(spec *specs.Spec, rootfs string) error {
 			rootfs+"/lib/ld-musl-armhf.so.1", 0755); err != nil {
 			return err
 		}
+	} else if goruntime.GOARCH == "arm64" {
+		if err := copyFile(runuAuxFileDir+"/libc.so",
+			rootfs+"/lib/ld-musl-aarch64.so.1", 0755); err != nil {
+			return err
+		}
 	}
 
 	// install frankenlibc-ed libc.so to the system one

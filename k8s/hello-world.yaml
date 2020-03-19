@@ -17,7 +17,7 @@ spec:
       - name: helloworld-runu
         image: thehajime/runu-base:$DOCKER_IMG_VERSION
         imagePullPolicy: Always
-        args: ["ping", "-c", "50", "127.0.0.1"]
+        args: ["ping", "-c", "50", "8.8.8.8"]
         env:
           - name: RUMP_VERBOSE
             value: "1"

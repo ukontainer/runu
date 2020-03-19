@@ -101,6 +101,7 @@ script:
   - bash -e test/docker-oci-test.sh
   - bash -e test/containerd-ctr-test.sh
   - bash -e test/docker-more-test.sh
+  - bash -e test/k8s-test.sh
 
 after_failure:
   - cat /tmp/dockerd.log

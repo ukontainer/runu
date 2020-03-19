@@ -1,0 +1,23 @@
+apiVersion: apps/v1 # for versions before 1.9.0 use apps/v1beta2
+kind: Deployment
+metadata:
+  name: helloworld-runu
+spec:
+  selector:
+    matchLabels:
+      app: helloworld-runu
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: helloworld-runu
+    spec:
+      runtimeClassName: ukontainer
+      containers:
+      - name: helloworld-runu
+        image: thehajime/runu-base:$DOCKER_IMG_VERSION
+        imagePullPolicy: Always
+        args: ["ping", "-c", "50", "127.0.0.1"]
+        env:
+          - name: RUMP_VERBOSE
+            value: "1"

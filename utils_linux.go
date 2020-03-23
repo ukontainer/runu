@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
-	"sort"
+	"strings"
 
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
@@ -11,19 +11,61 @@ import (
 	"github.com/vishvananda/netns"
 )
 
-func getVethHost() net.Interface {
-	// list root ns's interfaces before going into net ns
-	iface0, _ := net.Interfaces()
+func getVethHost(spec *specs.Spec) *net.Interface {
+	var netnsPath string
 
-	// sort by ifindex
-	sort.SliceStable(iface0, func(i, j int) bool {
-		return iface0[i].Index < iface0[j].Index
-	})
+	if spec.Linux != nil {
+		for _, v := range spec.Linux.Namespaces {
+			if v.Type == specs.NetworkNamespace {
+				netnsPath = v.Path
+				break
+			}
+		}
+	}
+	// should look like '/var/run/netns/cni-6d46d1b2-c836-3b4e-87a0-88641242aa5e'
+	if strings.Index(netnsPath, "/var/run/netns/") == -1 {
+		return nil
+	}
 
-	// XXX: need better detection of veth host-side pair
-	lastIf := iface0[len(iface0)-1]
+	origns, _ := netns.Get()
+	defer origns.Close()
 
-	return lastIf
+	netnsPath = strings.Replace(netnsPath, "/var/run/netns/", "", 1)
+	if err != nil {
+		logrus.Errorf("unable to get netns handle %s(%s)",
+			netnsPath, err)
+		return nil
+	}
+
+	nsh, err := netns.GetFromName(netnsPath)
+	if err := netns.Set(nsh); err != nil {
+		logrus.Errorf("unable to get set netns %s", err)
+		return nil
+	}
+
+	// Look for the ifindex of veth pair of the host interface
+	vEth, err := netlink.LinkByName("eth0")
+	if err != nil {
+		logrus.Errorf("unable to get guest veth %s", err)
+		return nil
+	}
+
+	ifIndex, err := netlink.VethPeerIndex(&netlink.Veth{LinkAttrs: *vEth.Attrs()})
+	if err != nil {
+		logrus.Errorf("unable to get ifindex of veth pair %s", err)
+		return nil
+	}
+
+	// Switch back to the original namespace
+	netns.Set(origns)
+	iface, err := net.InterfaceByIndex(ifIndex)
+	if err != nil {
+		logrus.Errorf("unable to get interface of veth pair (idx=%d)(%s)",
+			ifIndex, err)
+		return nil
+	}
+
+	return iface
 }
 
 // XXX: Only treat ipv4 information
@@ -52,7 +94,7 @@ func getVethInfo(spec *specs.Spec) (*lklIfInfo, error) {
 				return nil, fmt.Errorf("address is not IPNet: %+v", ifaddr)
 			}
 
-			logrus.Warnf("ifaddr= %s, ipnet=%s", ifaddr, ipNet)
+			logrus.Infof("ifaddr= %s, ipnet=%s", ifaddr, ipNet)
 			// XXX: We only treat IPv4 at the moment
 			// may need to work for IPv6 support
 			if ipNet.IP.To4() == nil {
@@ -93,8 +135,13 @@ func setupNetwork(spec *specs.Spec) (*lklIfInfo, error) {
 	var netnsPath string
 
 	// disable HW offload if raw socket
-	vethHostIf := getVethHost()
-	disableTxCsumOffloadForRawsock(vethHostIf.Name)
+	vethHostIf := getVethHost(spec)
+	// only pause container on k8s retures non-nil value
+	if vethHostIf != nil {
+		// XXX: this disable can be eliminated when vnethdr on raw sock
+		// is implemented.
+		disableTxCsumOffloadForRawsock(vethHostIf.Name)
+	}
 
 	if spec.Linux != nil {
 		for _, v := range spec.Linux.Namespaces {
@@ -112,7 +159,7 @@ func setupNetwork(spec *specs.Spec) (*lklIfInfo, error) {
 		return nil, nil
 	}
 
-	logrus.Debugf("nspath= %s", netnsPath)
+	logrus.Infof("nspath= %s", netnsPath)
 	nsh, err := netns.GetFromPath(netnsPath)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get netns handle %s", err)

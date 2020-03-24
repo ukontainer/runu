@@ -31,13 +31,14 @@ func getVethHost(spec *specs.Spec) *net.Interface {
 	defer origns.Close()
 
 	netnsPath = strings.Replace(netnsPath, "/var/run/netns/", "", 1)
+
+	nsh, err := netns.GetFromName(netnsPath)
 	if err != nil {
 		logrus.Errorf("unable to get netns handle %s(%s)",
 			netnsPath, err)
 		return nil
 	}
 
-	nsh, err := netns.GetFromName(netnsPath)
 	if err := netns.Set(nsh); err != nil {
 		logrus.Errorf("unable to get set netns %s", err)
 		return nil

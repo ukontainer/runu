@@ -13,6 +13,11 @@ fi
 # Kind preparation
 fold_start k8s.test.0 "k8s: KinD image preparation"
 
+# prepare RUNU_AUX_DIR
+create_runu_aux_dir
+cp $RUNU_AUX_DIR/libc.so k8s/
+cp $RUNU_AUX_DIR/lkick k8s/
+
 # Build kind node docker image
 cp $TRAVIS_HOME/gopath/bin/${RUNU_PATH}runu k8s/
 cd k8s

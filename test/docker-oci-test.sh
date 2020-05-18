@@ -14,6 +14,8 @@ if [ $TRAVIS_OS_NAME = "linux" ] ; then
     (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
         jq '.runtimes."runu-dev" |= {"path":"'${TRAVIS_HOME}'/gopath/bin/'${RUNU_PATH}'runu","runtimeArgs":[]}' | \
         jq '. |= .+{"experimental":true}' | \
+        jq '. |= .+{"ipv6":true}' | \
+        jq '. |= .+{"fixed-cidr-v6": "2001:db8::/64"}' | \
         tee /tmp/tmp.json
     sudo mv /tmp/tmp.json /etc/docker/daemon.json
     sudo service docker restart
@@ -105,3 +107,17 @@ fold_start test.docker.4 "docker alpine"
                -e RUNU_AUX_DIR=$RUNU_AUX_DIR alpine $ALPINE_PREFIX df -ha
     fi
 fold_end test.docker.4
+
+# test named
+fold_start test.docker.5 "docker named"
+    CID=named-docker
+    docker $DOCKER_RUN_ARGS -d --name $CID \
+     -e LKL_ROOTFS=imgs/named.img \
+     thehajime/runu-named:$DOCKER_IMG_VERSION \
+     named -c /etc/named/named.conf -g
+
+    sleep 10
+    docker ps -a
+    docker logs $CID
+    docker kill $CID
+fold_end test.docker.5

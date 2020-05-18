@@ -36,7 +36,10 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
 
     # build docker (client)
     if [ -z "$(which docker)" ] ; then
-	go get github.com/docker/cli/cmd/docker
+	curl -O https://download.docker.com/mac/static/stable/x86_64/docker-18.09.0.tgz
+	tar xfz docker-18.09.0.tgz
+	cp -f docker/docker ~/.local/bin
+	chmod +x ~/.local/bin/docker
     fi
 
     DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1"

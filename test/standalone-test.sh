@@ -12,7 +12,7 @@ fi
 
 fold_start test.0 "preparation test"
 # get script from moby
-curl https://raw.githubusercontent.com/moby/moby/master/contrib/download-frozen-image-v2.sh \
+curl https://raw.githubusercontent.com/moby/moby/7608e42da5abdd56c4d7b209384a6e512928d054/contrib/download-frozen-image-v2.sh \
      -o /tmp/download-frozen-image-v2.sh
 
 # get image runu-base

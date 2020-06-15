@@ -114,7 +114,7 @@ fold_start test.docker.5 "docker named"
     docker $DOCKER_RUN_ARGS -d --name $CID \
      -e LKL_ROOTFS=imgs/named.img \
      thehajime/runu-base:$DOCKER_IMG_VERSION \
-     named -c /etc/named/named.conf -g
+     named -c /etc/bind/named.conf -g
 
     sleep 10
     docker ps -a

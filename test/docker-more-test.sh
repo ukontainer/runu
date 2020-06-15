@@ -116,7 +116,7 @@ EOF
      -e LKL_NET=$TAP_IFNAME\
      -e LKL_CONFIG=/tmp/lkl.json\
      thehajime/runu-named:$DOCKER_IMG_VERSION \
-     named -c /etc/named/named.conf -g
+     named -c /etc/bind/named.conf -g
 
     sleep 10
     docker ps -a

@@ -113,7 +113,6 @@ EOF
 
     CID=named-docker
     docker $DOCKER_RUN_ARGS -d --name $CID \
-     -e LKL_ROOTFS=imgs/named.img \
      -e LKL_NET=$TAP_IFNAME\
      -e LKL_CONFIG=/tmp/lkl.json\
      thehajime/runu-named:$DOCKER_IMG_VERSION \

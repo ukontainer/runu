@@ -6,10 +6,83 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/opencontainers/runc/libcontainer/specconv"
 	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/urfave/cli"
 )
+
+// Example generates a template for spec file
+// inherited from runc/libcontainer/specconv/example.go to
+// avoid cgroup dependency
+func Example() *specs.Spec {
+	spec := &specs.Spec{
+		Version: specs.Version,
+		Root: &specs.Root{
+			Path:     "rootfs",
+			Readonly: true,
+		},
+		Process: &specs.Process{
+			Terminal: true,
+			User:     specs.User{},
+			Args: []string{
+				"sh",
+			},
+			Env: []string{
+				"PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+				"TERM=xterm",
+			},
+			Cwd:             "/",
+			NoNewPrivileges: true,
+		},
+		Hostname: "runu",
+		Linux: &specs.Linux{
+			MaskedPaths: []string{
+				"/proc/acpi",
+				"/proc/asound",
+				"/proc/kcore",
+				"/proc/keys",
+				"/proc/latency_stats",
+				"/proc/timer_list",
+				"/proc/timer_stats",
+				"/proc/sched_debug",
+				"/sys/firmware",
+				"/proc/scsi",
+			},
+			ReadonlyPaths: []string{
+				"/proc/bus",
+				"/proc/fs",
+				"/proc/irq",
+				"/proc/sys",
+				"/proc/sysrq-trigger",
+			},
+			Resources: &specs.LinuxResources{
+				Devices: []specs.LinuxDeviceCgroup{
+					{
+						Allow:  false,
+						Access: "rwm",
+					},
+				},
+			},
+			Namespaces: []specs.LinuxNamespace{
+				{
+					Type: specs.PIDNamespace,
+				},
+				{
+					Type: specs.NetworkNamespace,
+				},
+				{
+					Type: specs.IPCNamespace,
+				},
+				{
+					Type: specs.UTSNamespace,
+				},
+				{
+					Type: specs.MountNamespace,
+				},
+			},
+		},
+	}
+	return spec
+}
 
 var specCommand = cli.Command{
 	Name:        "spec",
@@ -27,7 +100,7 @@ var specCommand = cli.Command{
 		if err := checkArgs(context, 0, exactArgs); err != nil {
 			return err
 		}
-		spec := specconv.Example()
+		spec := Example()
 
 		checkNoFile := func(name string) error {
 			_, err := os.Stat(name)

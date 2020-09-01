@@ -1,4 +1,4 @@
-module runu
+module github.com/ukontainer/runu
 
 go 1.12
 

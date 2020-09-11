@@ -1,7 +1,7 @@
 dist: bionic
 language: go
 go:
-  - "1.12.x"
+  - "1.13.x"
 
 cache:
   directories:
@@ -85,7 +85,7 @@ before_script:
   - export -f travis_time_finish
   - export GO111MODULE=auto
   - go get -u github.com/gojp/goreportcard/cmd/goreportcard-cli
-  - go get -u github.com/alecthomas/gometalinter
+  - GO111MODULE=off go get -u github.com/alecthomas/gometalinter
   - go get -u github.com/gordonklaus/ineffassign
   - go get -u github.com/fzipp/gocyclo
   - go get -u github.com/client9/misspell/cmd/misspell

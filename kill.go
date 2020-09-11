@@ -57,7 +57,7 @@ var killCommand = cli.Command{
 		// kill main process
 		err = killFromPidFile(context, pidFilePriv, signal)
 		if err != nil {
-			logrus.Warnf("killing main process error %s", err)
+			return fmt.Errorf("killing main process error %s", err)
 		}
 
 		saveState("stopped", container, context)

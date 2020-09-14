@@ -156,6 +156,10 @@ func (s *service) StartShim(ctx context.Context, id, containerdBinary, container
 	if err != nil {
 		return "", err
 	}
+
+	os.Mkdir(filepath.Dir(address), 0711)
+	unix.Unlink(address)
+
 	socket, err := shim.NewSocket(address)
 	if err != nil {
 		if strings.Contains(err.Error(), "address already in use") {
@@ -166,12 +170,12 @@ func (s *service) StartShim(ctx context.Context, id, containerdBinary, container
 		}
 		return "", err
 	}
-	defer socket.Close()
+	// XXX: defer socket.Close() and f.Close() may close sockets created
+	// _immediately_ (on darwin?) thus, don't do for darwin
 	f, err := socket.File()
 	if err != nil {
 		return "", err
 	}
-	defer f.Close()
 
 	cmd.ExtraFiles = append(cmd.ExtraFiles, f)
 	// XXX: osx doesn't create a sock-file with net.FileListener(os.NewFile(3, "socket"))
@@ -205,6 +209,10 @@ func (s *service) StartShim(ctx context.Context, id, containerdBinary, container
 			}
 		}
 	}
+
+	// XXX: unix socket on darwin seems to take a bit moment
+	// before listened socket will be ready, so sleep a little
+	time.Sleep(time.Millisecond * 10)
 	return address, nil
 }
 

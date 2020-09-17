@@ -16,10 +16,12 @@ require (
 	github.com/docker/go-p9p v0.0.0-20191112112554-37d97cf40d03
 	github.com/gogo/protobuf v1.3.1
 	github.com/hashicorp/go-multierror v1.1.0 // indirect
+	github.com/hugelgupf/p9 v0.1.0
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/runtime-spec v1.0.2
 	github.com/pkg/errors v0.9.1
 	github.com/sirupsen/logrus v1.4.2
+	github.com/u-root/u-root v6.0.1-0.20200118052101-6bcd1cda5996+incompatible
 	github.com/urfave/cli v1.22.1
 	github.com/vishvananda/netlink v1.1.0
 	github.com/vishvananda/netns v0.0.0-20200728191858-db3c7e526aae

@@ -1,14 +1,13 @@
 package main
 
 import (
-	"context"
-	"io"
 	"net"
 	"os"
 
-	p9p "github.com/docker/go-p9p"
-	"github.com/docker/go-p9p/ufs"
+	"github.com/hugelgupf/p9/fsimpl/localfs"
+	"github.com/hugelgupf/p9/p9"
 	"github.com/sirupsen/logrus"
+	"github.com/u-root/u-root/pkg/ulog"
 )
 
 const (
@@ -44,30 +43,18 @@ func connect9pfs() (*os.File, bool) {
 
 // 9pfs server side
 func start9pfsServer(path string) {
-	ctx := context.Background()
 	l, err := net.Listen("tcp", addr9p)
 	if err != nil {
 		panic(err)
 	}
 	defer l.Close()
 
-	for {
-		c, err := l.Accept()
-		if err != nil {
-			panic(err)
-		}
-
-		go func(conn net.Conn) {
-			ctx := context.WithValue(ctx, contextKey("conn"), conn)
-			session, err := ufs.NewSession(ctx, path)
-			if err != nil {
-				logrus.Println("error creating session", err)
-				return
-			}
-
-			if err := p9p.ServeConn(ctx, conn, p9p.Dispatch(session)); err != nil && err != io.EOF {
-				logrus.Println("error serving conn:", err)
-			}
-		}(c)
+	// TODO: currently not in use
+	var opts []p9.ServerOpt
+	if false {
+		opts = append(opts, p9.WithServerLogger(ulog.Log))
 	}
+	// Run the server.
+	s := p9.NewServer(localfs.Attacher(path), opts...)
+	s.Serve(l)
 }

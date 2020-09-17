@@ -20,6 +20,7 @@ if [ $TRAVIS_OS_NAME = "linux" ] ; then
     sudo mv /tmp/tmp.json /etc/docker/daemon.json
     sudo service docker restart
 
+    DOCKER_RUN_EXT_ARGS="-e LKL_USE_9PFS=1"
 elif [ $TRAVIS_OS_NAME = "osx" ] ; then
 
     sudo mkdir -p /etc/docker/

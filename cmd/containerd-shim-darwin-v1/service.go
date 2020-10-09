@@ -178,9 +178,6 @@ func (s *service) StartShim(ctx context.Context, id, containerdBinary, container
 	}
 
 	cmd.ExtraFiles = append(cmd.ExtraFiles, f)
-	// XXX: osx doesn't create a sock-file with net.FileListener(os.NewFile(3, "socket"))
-	cmd.Args = append(cmd.Args, "-socket", address)
-
 	if err := cmd.Start(); err != nil {
 		return "", err
 	}

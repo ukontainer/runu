@@ -36,30 +36,13 @@ var createCommand = cli.Command{
 	},
 }
 
-func cmdCreateUkon(context *cli.Context, attach bool) error {
+func prepareBootCommand(context *cli.Context, container string, childPipe *os.File, volumeMounted bool) (*exec.Cmd, error) {
 	root := context.GlobalString("root")
-	bundle := context.String("bundle")
-	container := context.Args().First()
-	ocffile := filepath.Join(bundle, specConfig)
-	spec, err := loadSpec(ocffile)
 	const stdioFdCount = 3
-
-	if err != nil {
-		return fmt.Errorf("load config failed: %v", err)
-	}
-	if container == "" {
-		return fmt.Errorf("no container id provided")
-	}
-
-	err = createContainer(container, bundle, root, spec)
-	if err != nil {
-		return fmt.Errorf("failed to create container: %v", err)
-	}
-
 	// call `runu boot` to create new process
 	self, err := os.Executable()
 	if err != nil {
-		return fmt.Errorf("could not identify who am I: %v", err)
+		return nil, fmt.Errorf("could not identify who am I: %v", err)
 	}
 
 	args := []string{}
@@ -91,15 +74,14 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 
 	cmd := exec.Command(self, args...)
 
-	// wait for init complete
-	parentPipe, childPipe, err := os.Pipe()
-	if err != nil {
-		return fmt.Errorf("create: pipe failure (%s)", err)
-	}
 	cmd.ExtraFiles = append(cmd.ExtraFiles, childPipe)
 	cmd.Env = append(cmd.Env,
 		fmt.Sprintf("_LIBCONTAINER_INITPIPE=%d", stdioFdCount+len(cmd.ExtraFiles)-1),
 	)
+
+	if volumeMounted {
+		cmd.Env = append(cmd.Env, "LKL_USE_9PFS=1")
+	}
 
 	cwd, _ := os.Getwd()
 	logrus.Debugf("Starting command %s, cwd=%s, root=%s",
@@ -110,6 +92,38 @@ func cmdCreateUkon(context *cli.Context, attach bool) error {
 	cmd.SysProcAttr = &syscall.SysProcAttr{
 		Setpgid: false,
 	}
+	return cmd, nil
+}
+
+func cmdCreateUkon(context *cli.Context, attach bool) error {
+	root := context.GlobalString("root")
+	bundle := context.String("bundle")
+	container := context.Args().First()
+	ocffile := filepath.Join(bundle, specConfig)
+	spec, err := loadSpec(ocffile)
+
+	if err != nil {
+		return fmt.Errorf("load config failed: %v", err)
+	}
+	if container == "" {
+		return fmt.Errorf("no container id provided")
+	}
+
+	err = createContainer(container, bundle, root, spec)
+	if err != nil {
+		return fmt.Errorf("failed to create container: %v", err)
+	}
+
+	volumeMounted, err := doMounts(spec)
+	if err != nil {
+		return err
+	}
+	// wait for init complete
+	parentPipe, childPipe, err := os.Pipe()
+	if err != nil {
+		return fmt.Errorf("create: pipe failure (%s)", err)
+	}
+	cmd, err := prepareBootCommand(context, container, childPipe, volumeMounted)
 
 	if err := cmd.Start(); err != nil {
 		panic(err)

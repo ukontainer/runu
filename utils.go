@@ -258,8 +258,9 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 	fds := map[*os.File]bool{}
 	fdNum := 3
 	hasRootFs := false
-	use9pFs := false
 	lklJson := ""
+	// check if -v is specified
+	_, use9pFs := os.LookupEnv("LKL_USE_9PFS")
 
 	for _, env := range spec.Process.Env {
 		// look for LKL_ROOTFS env for .img/.iso files

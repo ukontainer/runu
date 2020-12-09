@@ -73,6 +73,15 @@ fold_start test.docker.2 "docker python"
            python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2
 
+# osx cannot use 9pfs as rootfs (issue #4)
+if [ $TRAVIS_OS_NAME = "linux" ] ; then
+fold_start test.docker.2.2 "docker python-slim"
+    docker $DOCKER_RUN_ARGS \
+           ukontainer/runu-python:$DOCKER_IMG_VERSION-slim \
+           python -c "print(\"hello world from python(docker-runu)\")"
+fold_end test.docker.2.2
+fi
+
 # test nginx
 fold_start test.docker.3 "docker nginx"
 CID=`docker $DOCKER_RUN_ARGS -d \
@@ -84,6 +93,17 @@ CID=`docker $DOCKER_RUN_ARGS -d \
     docker logs $CID
     docker kill $CID
 fold_end test.docker.3
+
+fold_start test.docker.3.2 "docker nginx-slim"
+CID=`docker $DOCKER_RUN_ARGS -d \
+ -e LKL_ROOTFS=imgs/data.iso \
+ ukontainer/runu-nginx:$DOCKER_IMG_VERSION-slim \
+ nginx`
+    sleep 2
+    docker ps -a
+    docker logs $CID
+    docker kill $CID
+fold_end test.docker.3.2
 
 
 # alipine image test

@@ -40,10 +40,10 @@ run_test()
 {
     bundle=$1
 
-    sudo runu --debug --root=/tmp/runu-root run --bundle=$bundle foo
+    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root run --bundle=$bundle foo
     sleep 5
-    sudo runu --debug --root=/tmp/runu-root kill foo 9 || true
-    sudo runu --debug --root=/tmp/runu-root delete foo
+    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root kill foo 9 || true
+    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root delete foo
 }
 
 # test hello-world

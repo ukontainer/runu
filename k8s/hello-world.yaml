@@ -15,7 +15,7 @@ spec:
       runtimeClassName: ukontainer
       containers:
       - name: helloworld-runu
-        image: thehajime/runu-base:$DOCKER_IMG_VERSION
+        image: ukontainer/runu-base:$DOCKER_IMG_VERSION
         imagePullPolicy: Always
         args: ["ping", "-c", "50", "8.8.8.8"]
         env:

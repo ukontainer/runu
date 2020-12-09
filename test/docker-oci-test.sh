@@ -53,12 +53,12 @@ fold_end test.dockerd.0 ""
 
 # test hello-world
 fold_start test.docker.0 "docker hello"
-    docker $DOCKER_RUN_ARGS thehajime/runu-base:$DOCKER_IMG_VERSION hello
+    docker $DOCKER_RUN_ARGS ukontainer/runu-base:$DOCKER_IMG_VERSION hello
 fold_end test.docker.0
 
 # test ping
 fold_start test.docker.1 "docker ping"
-    docker $DOCKER_RUN_ARGS thehajime/runu-base:$DOCKER_IMG_VERSION \
+    docker $DOCKER_RUN_ARGS ukontainer/runu-base:$DOCKER_IMG_VERSION \
            ping -c5 127.0.0.1
 fold_end test.docker.1
 
@@ -69,7 +69,7 @@ fold_start test.docker.2 "docker python"
     docker $DOCKER_RUN_ARGS -e HOME=/ \
            -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.img \
            -e PYTHONHASHSEED=1 \
-           thehajime/runu-base:$DOCKER_IMG_VERSION \
+           ukontainer/runu-base:$DOCKER_IMG_VERSION \
            python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2
 
@@ -77,7 +77,7 @@ fold_end test.docker.2
 fold_start test.docker.3 "docker nginx"
 CID=`docker $DOCKER_RUN_ARGS -d \
  -e LKL_ROOTFS=imgs/data.iso \
- thehajime/runu-base:$DOCKER_IMG_VERSION \
+ ukontainer/runu-base:$DOCKER_IMG_VERSION \
  nginx`
     sleep 2
     docker ps -a
@@ -113,7 +113,7 @@ fold_start test.docker.5 "docker named"
     CID=named-docker
     docker $DOCKER_RUN_ARGS -d --name $CID \
      -e LKL_ROOTFS=imgs/named.img \
-     thehajime/runu-base:$DOCKER_IMG_VERSION \
+     ukontainer/runu-base:$DOCKER_IMG_VERSION \
      named -c /etc/bind/named.conf -g
 
     sleep 10

@@ -16,7 +16,7 @@ mkdir -p $MNT_SRC
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -e LKL_ROOTFS=imgs/python.img \
        -v $MNT_SRC:$MNT_DST \
-       thehajime/runu-base:$DOCKER_IMG_VERSION \
+       ukontainer/runu-base:$DOCKER_IMG_VERSION \
        hello  2> fail_log || true
 cat fail_log
 cat fail_log | grep "OCI runtime create failed" >/dev/null
@@ -36,7 +36,7 @@ touch    $MNT_SRC/foo
 touch    $MNT_SRC/bar
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v $MNT_SRC:$MNT_DST \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "import os; print(os.listdir('/mnt'))" | egrep "foo.*bar|bar.*foo"
 rm -rf $MNT_SRC
 
@@ -59,7 +59,7 @@ fold_start test.docker.3 "docker-volume: naive -v option for named volume"
 docker run --rm -v named_vol:/mnt alpine touch /mnt/foo /mnt/bar
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v named_vol:/mnt \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "import os; print(os.listdir('/mnt'))" | egrep "foo.*bar|bar.*foo"
 docker volume rm named_vol
 fold_end test.docker.3
@@ -74,12 +74,12 @@ touch    $MNT_SRC/foo
 touch    $MNT_SRC/bar
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v $MNT_SRC:$MNT_DST:ro \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "import os; print(os.listdir('/mnt'))" | egrep "foo.*bar|bar.*foo"
 
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v $MNT_SRC:$MNT_DST:ro \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "f=open('${MNT_DST}/hello.txt', 'w'), print('hello',file=f);close(f)" 2> fail_log || true
 cat fail_log
 cat fail_log | grep "OSError" >/dev/null
@@ -99,7 +99,7 @@ docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
 
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v $MNT_SRC:$MNT_DST:ro \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "f=open('${MNT_DST}', 'w'), print('hello',file=f);close(f)" 2> fail_log || true
 cat fail_log
 cat fail_log | grep "OSError" >/dev/null
@@ -111,12 +111,12 @@ fold_start test.docker.6 "docker-volume: read only -v option for named volume"
 docker run --rm -v named_vol:/mnt alpine touch /mnt/foo /mnt/bar
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v named_vol:/mnt:ro \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "import os; print(os.listdir('/mnt'))" | egrep "foo.*bar|bar.*foo"
 
 docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
        -v named_vol:/mnt:ro \
-       thehajime/runu-python:$DOCKER_IMG_VERSION \
+       ukontainer/runu-python:$DOCKER_IMG_VERSION \
        python -c "f=open('/mnt/hello.txt', 'w'), print('hello',file=f);close(f)" 2> fail_log || true
 cat fail_log
 cat fail_log | grep "OSError" >/dev/null

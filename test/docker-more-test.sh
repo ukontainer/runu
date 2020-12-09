@@ -88,7 +88,7 @@ fold_end test.docker.conf.3
 fold_start test.docker.conf.4 "docker+: image json"
     docker $DOCKER_RUN_ARGS -e RUMP_VERBOSE=1 \
            -e LKL_NET=$TAP_IFNAME -e LKL_CONFIG=/lkl.json \
-           thehajime/runu-base:$DOCKER_IMG_VERSION \
+           ukontainer/runu-base:$DOCKER_IMG_VERSION \
            hello | grep virtio-mmio.0
 fold_end test.docker.conf.4
 
@@ -115,7 +115,7 @@ EOF
     docker $DOCKER_RUN_ARGS -d --name $CID \
      -e LKL_NET=$TAP_IFNAME\
      -e LKL_CONFIG=/tmp/lkl.json\
-     thehajime/runu-named:$DOCKER_IMG_VERSION \
+     ukontainer/runu-named:$DOCKER_IMG_VERSION \
      named -c /etc/bind/named.conf -g
 
     sleep 10

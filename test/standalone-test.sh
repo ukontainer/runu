@@ -17,7 +17,7 @@ curl https://raw.githubusercontent.com/moby/moby/7608e42da5abdd56c4d7b209384a6e5
 
 # get image runu-base
 mkdir -p /tmp/runu
-bash /tmp/download-frozen-image-v2.sh /tmp/runu/ thehajime/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME-$ARCH
+bash /tmp/download-frozen-image-v2.sh /tmp/runu/ ukontainer/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME-$ARCH
 
 # extract images from layers
 for layer in `find /tmp/runu -name layer.tar`

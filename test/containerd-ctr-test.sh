@@ -34,7 +34,7 @@ fold_end test.containerd.0 ""
 # pull an image
 fold_start test.containerd.0 "pull image"
     ctr -a /tmp/ctrd/run/containerd/containerd.sock i pull \
-       docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION
+       docker.io/ukontainer/runu-base:$DOCKER_IMG_VERSION
     ctr -a /tmp/ctrd/run/containerd/containerd.sock i pull \
         --platform=linux/amd64 docker.io/library/alpine:latest
 fold_end test.containerd.0 "pull image"
@@ -42,14 +42,14 @@ fold_end test.containerd.0 "pull image"
 # test hello-world
 fold_start test.containerd.1 "test hello"
     ctr $CTR_GLOBAL_OPT run $CTR_ARGS \
-        docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello hello
+        docker.io/ukontainer/runu-base:$DOCKER_IMG_VERSION hello hello
 fold_end test.containerd.1
 
 # test ping
 fold_start test.containerd.2 "test ping"
     ctr $CTR_GLOBAL_OPT run $CTR_ARGS \
         --env LKL_ROOTFS=imgs/python.iso \
-        docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello \
+        docker.io/ukontainer/runu-base:$DOCKER_IMG_VERSION hello \
         ping -c5 127.0.0.1
 fold_end test.containerd.2
 
@@ -61,7 +61,7 @@ fold_start test.containerd.3 "test python"
         --env HOME=/ --env PYTHONHOME=/python \
         --env LKL_ROOTFS=imgs/python.img \
         --env PYTHONHASHSEED=1 \
-        docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello \
+        docker.io/ukontainer/runu-base:$DOCKER_IMG_VERSION hello \
         python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.containerd.3
 
@@ -69,7 +69,7 @@ fold_end test.containerd.3
 fold_start test.containerd.4 "test nginx"
     ctr $CTR_GLOBAL_OPT run $CTR_ARGS \
         --env LKL_ROOTFS=imgs/data.iso \
-        docker.io/thehajime/runu-base:$DOCKER_IMG_VERSION hello \
+        docker.io/ukontainer/runu-base:$DOCKER_IMG_VERSION hello \
         nginx &
 sleep 3
 killall -9 ctr

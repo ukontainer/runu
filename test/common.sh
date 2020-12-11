@@ -94,4 +94,4 @@ if [ -z $ARCH ] ; then
     fi
 fi
 
-DOCKER_IMG_VERSION=0.4
+DOCKER_IMG_VERSION=0.5

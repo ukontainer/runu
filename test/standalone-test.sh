@@ -17,7 +17,13 @@ curl https://raw.githubusercontent.com/moby/moby/7608e42da5abdd56c4d7b209384a6e5
 
 # get image runu-base
 mkdir -p /tmp/runu
-bash /tmp/download-frozen-image-v2.sh /tmp/runu/ ukontainer/runu-base:$DOCKER_IMG_VERSION-$TRAVIS_OS_NAME-$ARCH
+if [ $TRAVIS_OS_NAME = "osx" ] ; then
+    export OS_NAME="darwin"
+elif [ $TRAVIS_OS_NAME = "linux" ] ; then
+    export OS_NAME="linux"
+fi
+DIGEST=`curl -s "https://registry.hub.docker.com/v2/repositories/ukontainer/runu-base/tags/$DOCKER_IMG_VERSION?page_size=100" | jq ".images | .[] | select(.os == \"$OS_NAME\" and .architecture == \"$ARCH\") | .digest " | sed "s/\\"//g" `
+bash /tmp/download-frozen-image-v2.sh /tmp/runu/ ukontainer/runu-base:$DOCKER_IMG_VERSION@$DIGEST
 
 # extract images from layers
 for layer in `find /tmp/runu -name layer.tar`

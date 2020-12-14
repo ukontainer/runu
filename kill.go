@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"os"
@@ -60,7 +62,7 @@ var killCommand = cli.Command{
 			return fmt.Errorf("killing main process error %s", err)
 		}
 
-		saveState("stopped", container, context)
+		saveState(specs.StateStopped, container, context)
 		return nil
 	},
 }

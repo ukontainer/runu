@@ -31,7 +31,7 @@ var stateCommand = cli.Command{
 	},
 }
 
-func saveState(status string, container string, context *cli.Context) error {
+func saveState(status specs.ContainerState, container string, context *cli.Context) error {
 	root := context.GlobalString("root")
 	absRoot, _ := filepath.Abs(root)
 

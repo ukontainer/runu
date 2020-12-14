@@ -8,6 +8,7 @@ import (
 	goruntime "runtime"
 	"strconv"
 
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"golang.org/x/sys/unix"
@@ -60,7 +61,7 @@ func bootContainer(context *cli.Context, attach bool) error {
 		f.Close()
 	}
 
-	saveState("created", container, context)
+	saveState(specs.StateCreated, container, context)
 
 	envInitPipe := os.Getenv("_LIBCONTAINER_INITPIPE")
 	pipefd, err := strconv.Atoi(envInitPipe)
@@ -94,7 +95,7 @@ func bootContainer(context *cli.Context, attach bool) error {
 	unix.Kill(pidI, unix.SIGCHLD)
 	logrus.Debugf("sending SIGCHLD to parent %d", pidI)
 
-	saveState("stopped", container, context)
+	saveState(specs.StateStopped, container, context)
 	logrus.Debugf("process stopped %s", cmd.Args)
 
 	return err

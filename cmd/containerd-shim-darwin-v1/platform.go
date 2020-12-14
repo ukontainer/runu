@@ -28,7 +28,7 @@ import (
 type unixPlatform struct {
 }
 
-func (p *unixPlatform) CopyConsole(ctx context.Context, console console.Console, stdin, stdout, stderr string, wg *sync.WaitGroup) (console.Console, error) {
+func (p *unixPlatform) CopyConsole(ctx context.Context, console console.Console, id, stdin, stdout, stderr string, wg *sync.WaitGroup) (console.Console, error) {
 	return nil, nil
 }
 

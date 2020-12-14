@@ -152,7 +152,7 @@ func (s *service) StartShim(ctx context.Context, id, containerdBinary, container
 		return "", err
 	}
 	grouping := id
-	address, err := shim.SocketAddress(ctx, grouping)
+	address, err := shim.SocketAddress(ctx, containerdAddress, grouping)
 	if err != nil {
 		return "", err
 	}

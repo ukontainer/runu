@@ -28,5 +28,5 @@ const (
 )
 
 func main() {
-	shim.Run("io.containerd.darwin.v1", New)
+	shim.Run("io.containerd.runu.v1", New)
 }

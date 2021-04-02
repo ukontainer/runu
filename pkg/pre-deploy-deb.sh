@@ -3,9 +3,8 @@
 . $(dirname "${BASH_SOURCE[0]}")/../test/common.sh
 
 # Prepare supplement files for runu
-curl -L \
-     https://dl.bintray.com/ukontainer/ukontainer/$TRAVIS_OS_NAME/$ARCH/frankenlibc.tar.gz \
-     -o /tmp/frankenlibc.tar.gz
+URL="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-$ARCH-$TRAVIS_OS_NAME.tar.gz"
+curl -L $URL -o /tmp/frankenlibc.tar.gz
 tar xfz /tmp/frankenlibc.tar.gz -C /tmp/
 
 

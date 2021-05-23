@@ -146,13 +146,13 @@ func readSpec() (*spec, error) {
 	return &s, nil
 }
 
-func (s *service) StartShim(ctx context.Context, id, containerdBinary, containerdAddress, containerdTTRPCAddress string) (_ string, retErr error) {
-	cmd, err := newCommand(ctx, id, containerdBinary, containerdAddress, containerdTTRPCAddress)
+func (s *service) StartShim(ctx context.Context, opts shim.StartOpts) (_ string, retErr error) {
+	cmd, err := newCommand(ctx, opts.ID, opts.ContainerdBinary, opts.Address, opts.TTRPCAddress)
 	if err != nil {
 		return "", err
 	}
-	grouping := id
-	address, err := shim.SocketAddress(ctx, containerdAddress, grouping)
+	grouping := opts.ID
+	address, err := shim.SocketAddress(ctx, opts.Address, grouping)
 	if err != nil {
 		return "", err
 	}

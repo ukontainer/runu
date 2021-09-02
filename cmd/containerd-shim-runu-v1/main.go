@@ -28,5 +28,10 @@ const (
 )
 
 func main() {
-	shim.Run("io.containerd.runu.v1", New)
+	shim.Run("io.containerd.runu.v1", New, func(cfg *shim.Config) {
+		cfg.NoSetupLogger = false
+		// We have own reaper implementation in shim
+		cfg.NoSubreaper = true
+		cfg.NoReaper = true
+	})
 }

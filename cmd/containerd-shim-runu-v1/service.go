@@ -32,6 +32,7 @@ import (
 	eventstypes "github.com/containerd/containerd/api/events"
 	"github.com/containerd/containerd/api/types/task"
 	"github.com/containerd/containerd/errdefs"
+	"github.com/containerd/containerd/log"
 	"github.com/containerd/containerd/mount"
 	"github.com/containerd/containerd/namespaces"
 	"github.com/containerd/containerd/pkg/process"
@@ -40,7 +41,6 @@ import (
 	"github.com/containerd/containerd/runtime/v2/runc/options"
 	"github.com/containerd/containerd/runtime/v2/shim"
 	taskAPI "github.com/containerd/containerd/runtime/v2/task"
-	"github.com/containerd/containerd/sys/reaper"
 	runcC "github.com/containerd/go-runc"
 	"github.com/containerd/typeurl"
 	"github.com/gogo/protobuf/proto"
@@ -202,12 +202,15 @@ func New(ctx context.Context, id string, publisher shim.Publisher, shutdown func
 		id:         id,
 		context:    ctx,
 		events:     make(chan interface{}, 128),
-		ec:         reaper.Default.Subscribe(),
+		ec:         Default.Subscribe(),
 		cancel:     shutdown,
 		containers: make(map[string]*darwinContainer),
 	}
 	go s.processExits()
-	runcC.Monitor = reaper.Default
+
+	// setup our own reaper (similar to runj/freebsd shim)
+	SetupReaperSignals(ctx, log.G(ctx).WithField("id", id))
+	runcC.Monitor = Default
 	if err := s.initPlatform(); err != nil {
 		shutdown()
 		return nil, errors.Wrap(err, "failed to initialized platform behavior")

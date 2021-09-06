@@ -1,4 +1,5 @@
-// +build !windows
+//go:build darwin
+// +build darwin
 
 /*
    Copyright The containerd Authors.
@@ -25,8 +26,8 @@ import (
 	"os/signal"
 	"path/filepath"
 	"strings"
-	"syscall"
 	"sync"
+	"syscall"
 	"time"
 
 	"github.com/containerd/containerd/pkg/process"
@@ -293,6 +294,7 @@ func exitStatus(status unix.WaitStatus) int {
 	return status.ExitStatus()
 }
 
+// SetupReaperSignals initializes of signal handlings
 func SetupReaperSignals(ctx context.Context, logger *logrus.Entry) error {
 	signals := make(chan os.Signal, 32)
 	signal.Notify(signals, unix.SIGCHLD)

@@ -58,14 +58,14 @@ create_runu_aux_dir() {
     fi
 
     # download pre-built frankenlibc
-    curl -L https://dl.bintray.com/ukontainer/ukontainer/$TRAVIS_OS_NAME/$ARCH/frankenlibc.tar.gz \
-	 -o /tmp/frankenlibc.tar.gz
+    URL="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-$ARCH-$TRAVIS_OS_NAME.tar.gz"
+    URL_LINUX="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-amd64-linux.tar.gz"
+    curl -L $URL -o /tmp/frankenlibc.tar.gz
     tar xfz /tmp/frankenlibc.tar.gz -C /tmp/
     cp /tmp/opt/rump/bin/rexec $RUNU_AUX_DIR/rexec
     cp /tmp/opt/rump/bin/lkick $RUNU_AUX_DIR/lkick
     if [ $TRAVIS_OS_NAME == "osx" ]; then
-	curl -L https://dl.bintray.com/ukontainer/ukontainer/linux/amd64/frankenlibc.tar.gz \
-	     -o /tmp/frankenlibc-linux.tar.gz
+	curl -L $URL_LINUX -o /tmp/frankenlibc-linux.tar.gz
 	tar xfz /tmp/frankenlibc-linux.tar.gz -C /tmp opt/rump/lib/libc.so
     fi
     if [ -f /tmp/opt/rump/lib/libc.so ] ; then

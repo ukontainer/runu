@@ -110,17 +110,15 @@ after_failure:
   - cat /tmp/docker-manifest.log
 
 
-## bintray package deploy
+## package deploy to github release (TODO: look for bintray alt.)
 before_deploy:
   - bash -ex pkg/pre-deploy-deb.sh
   - bash -ex pkg/pre-deploy-test-deb.sh
 
 deploy:
-  # Upload debian packages to Bintray
-  provider: bintray
-  file: pkg/bintray-deb.json
-  user: $BINTRAY_USER
-  key: $BINTRAY_APIKEY
+  provider: releases
+  api_key: $GITHUB_TOKEN
+  file: $PACKAGE_NAME_VERSION
   skip_cleanup: true
   on:
     condition: $TRAVIS_OS_NAME = linux

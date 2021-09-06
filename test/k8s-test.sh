@@ -2,7 +2,8 @@
 
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-KIND_VERSION=v0.7.0
+KIND_VERSION=v0.11.1
+KIND_IMG_VERSION=v1.21.1
 
 # XXX: need multi-arch image build
 if [ $TRAVIS_ARCH != "amd64" ] || [ $TRAVIS_OS_NAME != "linux" ] ; then
@@ -22,7 +23,7 @@ cp $RUNU_AUX_DIR/lkick k8s/
 cp $TRAVIS_HOME/gopath/bin/${RUNU_PATH}runu k8s/
 cd k8s
 echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-docker build -t thehajime/node-runu:v1.17.0 .
+docker build -t thehajime/node-runu:$KIND_IMG_VERSION .
 cd ..
 
 fold_end k8s.test.0 ""
@@ -41,7 +42,7 @@ fold_end k8s.test.1 ""
 
 
 fold_start k8s.test.2 "k8s: kind setup"
-kind create cluster --image thehajime/node-runu:v1.17.0 --config k8s/kind-cluster.yaml
+kind create cluster --image thehajime/node-runu:$KIND_IMG_VERSION --config k8s/kind-cluster.yaml
 kubectl get pods -o wide -A
 kubectl get nodes -o wide -A
 

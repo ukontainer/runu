@@ -5,14 +5,14 @@ go 1.13
 replace github.com/Sirupsen/logrus v1.4.2 => github.com/sirupsen/logrus v1.4.2
 
 replace (
-	github.com/containerd/containerd v1.5.1 => github.com/ukontainer/containerd v1.5.1-0.20210902042819-1e9257994968
-	github.com/containerd/containerd/api => github.com/containerd/containerd/api v0.0.0-20210802172229-7d4891783aac
+	github.com/containerd/containerd => github.com/ukontainer/containerd v1.5.1-0.20210908141113-5867ffe183c5
+	github.com/containerd/containerd/api => github.com/containerd/containerd/api v0.0.0-20210908133427-99987f2a5eae
 )
 
 require (
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20210715213245-6c3934b029d8 // indirect
 	github.com/Microsoft/go-winio v0.5.0 // indirect
-	github.com/Microsoft/hcsshim v0.8.18 // indirect
+	github.com/Microsoft/hcsshim v0.8.21 // indirect
 	github.com/containerd/console v1.0.2
 	github.com/containerd/containerd v1.5.1
 	github.com/containerd/containerd/api v0.0.0

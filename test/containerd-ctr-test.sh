@@ -28,6 +28,8 @@ fold_start test.containerd.0 "boot containerd"
     sudo containerd -l debug -c /tmp/config.toml > /tmp/containerd.log 2>&1 &
     sleep 3
     chmod 755 /tmp/ctrd
+
+    ctr $CTR_GLOBAL_OPT version
 fold_end test.containerd.0 ""
 
 

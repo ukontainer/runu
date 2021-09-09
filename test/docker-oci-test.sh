@@ -30,7 +30,7 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
     # prepare dockerd
     mkdir -p /tmp/containerd-shim
     sudo killall containerd || true
-    sudo dockerd --config-file /etc/docker/daemon.json > $HOME/dockerd.log 2>&1 &
+    sudo dockerd --config-file /etc/docker/daemon.json > /tmp/dockerd.log 2>&1 &
     sleep 3
     sudo chmod 666 /tmp/var/run/docker.sock
     sudo chmod 777 /tmp/var/run/
@@ -43,6 +43,9 @@ elif [ $TRAVIS_OS_NAME = "osx" ] ; then
 	cp -f docker/docker ~/.local/bin
 	chmod +x ~/.local/bin/docker
     fi
+
+    docker version
+    docker info
 
     DOCKER_RUN_EXT_ARGS="--platform=linux/amd64 -e LKL_USE_9PFS=1"
     # XXX: this is required when we use 9pfs rootfs (e.g., on mac)

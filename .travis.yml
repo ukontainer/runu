@@ -64,6 +64,7 @@ jobs:
         - mkdir -p ~/.local/bin
         - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
+
     #- os: osx
     #  osx_image: xcode10.1
     #  cache:
@@ -105,6 +106,8 @@ before_script:
   - export BUILD_VERSION=$RELEASE_VERSION.$TRAVIS_BUILD_NUMBER
   - export BUILD_DATE=$(date "+%Y%m%d")
   - export PACKAGE_NAME_VERSION=$PACKAGE_NAME-$BUILD_VERSION-$DEB_ARCH.deb
+  # TODO: for dockerd which use runtime name 'io.containerd.runtime.v1.linux'
+  - if [ $TRAVIS_OS_NAME = "osx" ] ; then cp $GOPATH/bin/containerd-shim-runu-v1 ~/.local/bin/containerd-shim-v1-linux ; fi
 
 script:
   - if [ $TRAVIS_ARCH = "amd64" ] && [ $TRAVIS_OS_NAME = "linux" ] ; then GO111MODULE=on goreportcard-cli -t 100.0 -v ; fi

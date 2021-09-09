@@ -7,7 +7,7 @@ if [ $TRAVIS_OS_NAME != "osx" ] ; then
     exit 0
 fi
 
-CTR_ARGS="--rm --runtime=io.containerd.runtime.v1.linux --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
+CTR_ARGS="--rm --runtime=io.containerd.runu.v1 --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
 CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock"
 
 sudo rm -rf /tmp/ctrd/

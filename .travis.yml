@@ -54,29 +54,40 @@ jobs:
         - export CGO_ENABLED=1
         - export GOARCH=arm64
     - os: osx
-      osx_image: xcode10.1
+      osx_image: xcode12.5
       cache:
         directories:
           - $HOME/Library/Caches/go-build
       before_install:
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
         - HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
         - mkdir -p ~/.local/bin
         - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
         - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
-    - os: osx
-      osx_image: xcode10.2
-      cache:
-        directories:
-          - $HOME/Library/Caches/go-build
-      before_install:
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
-        - HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
-        - mkdir -p ~/.local/bin
-        - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
-        - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
+    #- os: osx
+    #  osx_image: xcode10.1
+    #  cache:
+    #    directories:
+    #      - $HOME/Library/Caches/go-build
+    #  before_install:
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
+    #    - mkdir -p ~/.local/bin
+    #    - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
+    #    - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
+    #- os: osx
+    #  osx_image: xcode10.2
+    #  cache:
+    #    directories:
+    #      - $HOME/Library/Caches/go-build
+    #  before_install:
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew install jq
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew cask info tuntap
+    #    - HOMEBREW_NO_AUTO_UPDATE=1 brew install ukontainer/lkl/dockerd-darwin
+    #    - mkdir -p ~/.local/bin
+    #    - export PATH=/usr/local/opt/ccache/libexec:$HOME/.local/bin:$PATH
+    #    - ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
 before_script:
   - export -f travis_nanoseconds

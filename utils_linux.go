@@ -11,6 +11,8 @@ import (
 	"github.com/vishvananda/netns"
 )
 
+var runuAuxFileDir = "/usr/lib/runu"
+
 func getVethHost(spec *specs.Spec) *net.Interface {
 	var netnsPath string
 

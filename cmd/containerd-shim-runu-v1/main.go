@@ -26,10 +26,12 @@ import (
 const (
 	// RunuRoot is root directory for runtime execution
 	RunuRoot = "/var/run/containerd/runu"
+	// RuntimeV1 is the name of runtime
+	RuntimeV1 = "io.containerd.runu.v1"
 )
 
 func main() {
-	shim.Run("io.containerd.runu.v1", New, func(cfg *shim.Config) {
+	shim.Run(RuntimeV1, New, func(cfg *shim.Config) {
 		cfg.NoSetupLogger = false
 		// We have own reaper implementation in shim
 		cfg.NoSubreaper = true

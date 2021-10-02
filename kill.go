@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"os"
@@ -57,10 +59,10 @@ var killCommand = cli.Command{
 		// kill main process
 		err = killFromPidFile(context, pidFilePriv, signal)
 		if err != nil {
-			logrus.Warnf("killing main process error %s", err)
+			return fmt.Errorf("killing main process error %s", err)
 		}
 
-		saveState("stopped", container, context)
+		saveState(specs.StateStopped, container, context)
 		return nil
 	},
 }

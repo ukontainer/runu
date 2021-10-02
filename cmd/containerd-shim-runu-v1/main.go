@@ -1,4 +1,5 @@
-// +build !windows,!linux
+//go:build darwin
+// +build darwin
 
 /*
    Copyright The containerd Authors.
@@ -19,28 +20,21 @@
 package main
 
 import (
-	"context"
-	"sync"
-
-	"github.com/containerd/console"
+	"github.com/containerd/containerd/runtime/v2/shim"
 )
 
-type unixPlatform struct {
-}
+const (
+	// RunuRoot is root directory for runtime execution
+	RunuRoot = "/var/run/containerd/runu"
+	// RuntimeV1 is the name of runtime
+	RuntimeV1 = "io.containerd.runu.v1"
+)
 
-func (p *unixPlatform) CopyConsole(ctx context.Context, console console.Console, stdin, stdout, stderr string, wg *sync.WaitGroup) (console.Console, error) {
-	return nil, nil
-}
-
-func (p *unixPlatform) ShutdownConsole(ctx context.Context, cons console.Console) error {
-	return nil
-}
-
-func (p *unixPlatform) Close() error {
-	return nil
-}
-
-func (s *service) initPlatform() error {
-	s.platform = &unixPlatform{}
-	return nil
+func main() {
+	shim.Run(RuntimeV1, New, func(cfg *shim.Config) {
+		cfg.NoSetupLogger = false
+		// We have own reaper implementation in shim
+		cfg.NoSubreaper = true
+		cfg.NoReaper = true
+	})
 }

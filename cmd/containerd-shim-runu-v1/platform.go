@@ -1,3 +1,4 @@
+//go:build darwin
 // +build darwin
 
 /*
@@ -19,14 +20,28 @@
 package main
 
 import (
-	"github.com/containerd/containerd/runtime/v2/shim"
+	"context"
+	"sync"
+
+	"github.com/containerd/console"
 )
 
-const (
-	// RunuRoot is root directory for runtime execution
-	RunuRoot = "/var/run/containerd/runu"
-)
+type unixPlatform struct {
+}
 
-func main() {
-	shim.Run("io.containerd.darwin.v1", New)
+func (p *unixPlatform) CopyConsole(ctx context.Context, console console.Console, id, stdin, stdout, stderr string, wg *sync.WaitGroup) (console.Console, error) {
+	return nil, nil
+}
+
+func (p *unixPlatform) ShutdownConsole(ctx context.Context, cons console.Console) error {
+	return nil
+}
+
+func (p *unixPlatform) Close() error {
+	return nil
+}
+
+func (s *service) initPlatform() error {
+	s.platform = &unixPlatform{}
+	return nil
 }

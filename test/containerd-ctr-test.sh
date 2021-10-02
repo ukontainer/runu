@@ -7,8 +7,9 @@ if [ $TRAVIS_OS_NAME != "osx" ] ; then
     exit 0
 fi
 
-CTR_ARGS="--rm --runtime=io.containerd.runtime.v1.linux --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
+CTR_ARGS="--rm --runtime=io.containerd.runu.v1 --fifo-dir /tmp/ctrd --env RUMP_VERBOSE=1"
 CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock"
+NERDCTL_ARGS="--rm --env RUMP_VERBOSE=1"
 
 sudo rm -rf /tmp/ctrd/
 
@@ -28,6 +29,10 @@ fold_start test.containerd.0 "boot containerd"
     sudo containerd -l debug -c /tmp/config.toml > /tmp/containerd.log 2>&1 &
     sleep 3
     chmod 755 /tmp/ctrd
+
+    ctr $CTR_GLOBAL_OPT version
+    nerdctl $CTR_GLOBAL_OPT version
+    nerdctl $CTR_GLOBAL_OPT info
 fold_end test.containerd.0 ""
 
 
@@ -84,3 +89,54 @@ fold_start test.containerd.5 "test alpine Linux on darwin"
         --env RUNU_AUX_DIR=$RUNU_AUX_DIR --env LKL_USE_9PFS=1 \
         docker.io/library/alpine:latest alpine1 /bin/busybox ls -l
 fold_end test.containerd.5
+
+
+###
+### nerdctl tests
+###
+
+# preparation of nerdctl
+
+# test hello-world (nerdctl)
+fold_start test.nerdctl.1 "test hello (nerdctl)"
+    sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
+        ukontainer/runu-base:$DOCKER_IMG_VERSION hello
+fold_end test.nerdctl.1
+
+# test ping (nerdctl)
+fold_start test.nerdctl.2 "test ping (nerdctl)"
+    sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
+        --env LKL_ROOTFS=imgs/python.iso \
+        ukontainer/runu-base:$DOCKER_IMG_VERSION \
+        ping -c5 127.0.0.1
+fold_end test.nerdctl.2
+
+# test python (nerdctl)
+# XXX: PYTHONHASHSEED=1 is workaround for slow read of getrandom() on 4.19
+# (4.16 doesn't have such)
+fold_start test.nerdctl.3 "test python (nerdctl)"
+    sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
+        --env HOME=/ --env PYTHONHOME=/python \
+        --env LKL_ROOTFS=imgs/python.img \
+        --env PYTHONHASHSEED=1 \
+        ukontainer/runu-base:$DOCKER_IMG_VERSION \
+        python -c "print(\"hello world from python(docker-runu)\")"
+fold_end test.nerdctl.3
+
+# test nginx (nerdctl)
+fold_start test.nerdctl.4 "test nginx (nerdctl)"
+    sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
+        --env LKL_ROOTFS=imgs/data.iso \
+        ukontainer/runu-base:$DOCKER_IMG_VERSION \
+        nginx &
+sleep 3
+sudo killall -9 nerdctl
+fold_end test.nerdctl.4
+
+# test alpine (nerdctl)
+
+fold_start test.nerdctl.5 "test alpine Linux on darwin (nerdctl)"
+    sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
+        --env RUNU_AUX_DIR=$RUNU_AUX_DIR --env LKL_USE_9PFS=1 \
+        library/alpine:latest /bin/busybox ls -l
+fold_end test.nerdctl.5

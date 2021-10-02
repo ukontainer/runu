@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+
+	"github.com/opencontainers/runtime-spec/specs-go"
 	"github.com/sirupsen/logrus"
 	"github.com/urfave/cli"
 	"os"
@@ -20,7 +22,7 @@ var startCommand = cli.Command{
 
 		container := context.Args().Get(0)
 		resumeUkontainer(context, container)
-		saveState("running", container, context)
+		saveState(specs.StateRunning, container, context)
 		return nil
 	},
 }

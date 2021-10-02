@@ -29,7 +29,6 @@ const (
 )
 
 var (
-	runuAuxFileDir      = "/usr/lib/runu"
 	fdInfoConfigJson    = "__RUMP_FDINFO_CONFIGJSON"
 	fdInfoEnvPrefixNet  = "__RUMP_FDINFO_NET_"
 	fdInfoEnvPrefixDisk = "__RUMP_FDINFO_DISK_"

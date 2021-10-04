@@ -33,13 +33,14 @@ travis_time_finish() {
 }
 
 fold_start() {
-  echo -e "travis_fold:start:$1\033[33;1m$2\033[0m"
-  travis_time_start
+    echo -e "$1 $2"
+    set -x
 }
 
 fold_end() {
-  travis_time_finish
-  echo -e "\ntravis_fold:end:$1\r"
+    echo -e "$1"
+    set +x
+    echo "====================================================================="
 }
 
 
@@ -52,6 +53,7 @@ create_osx_chroot() {
 
 create_runu_aux_dir() {
     export RUNU_AUX_DIR="/tmp/runu"
+    mkdir -p $RUNU_AUX_DIR
 
     if [ -a $RUNU_AUX_DIR/lkick ] ; then
 	return
@@ -93,5 +95,3 @@ if [ -z $ARCH ] ; then
 	ARCH="arm"
     fi
 fi
-
-DOCKER_IMG_VERSION=0.5

@@ -20,20 +20,18 @@ mkdir -p pkg/deb/usr/lib/runu/
 cp -f /tmp/opt/rump/bin/lkick pkg/deb/usr/lib/runu/
 cp -f /tmp/opt/rump/lib/libc.so pkg/deb/usr/lib/runu/
 
-cp $TRAVIS_HOME/gopath/bin/${RUNU_PATH}runu pkg/deb/usr/bin/
+GOPATH=`go env GOPATH`
+
+if [ -f $GOPATH/bin/runu ] ; then
+  cp $GOPATH/bin/runu pkg/deb/usr/bin/
+elif [ -f $GOPATH/bin/$GOOS_$GOARCH/runu ] ; then
+  cp $GOPATH/bin/$GOOS_$GOARCH/runu pkg/deb/usr/bin/
+fi
 
 dpkg-deb --build pkg/deb
-mv pkg/deb.deb $PACKAGE_NAME_VERSION
+mv pkg/deb.deb $PACKAGE_FILENAME
 
 # Output detail on the resulting package for debugging purpose
-ls -l $PACKAGE_NAME_VERSION
-dpkg --contents $PACKAGE_NAME_VERSION
-md5sum $PACKAGE_NAME_VERSION
-
-# Set the packages name and details in the descriptor file
-sed -i "s/__NAME__/$PACKAGE_NAME/g" pkg/bintray-deb.json
-sed -i "s/__REPO_NAME__/$BINTRAY_REPO_NAME/g" pkg/bintray-deb.json
-sed -i "s/__SUBJECT__/$BINTRAY_ORG/g" pkg/bintray-deb.json
-sed -i "s/__LICENSE__/$BINTRAY_LICENSE/g" pkg/bintray-deb.json
-sed -i "s/__VERSION__/$BUILD_VERSION/g" pkg/bintray-deb.json
-sed -i "s/__ARCH__/$DEB_ARCH/g" pkg/bintray-deb.json
+ls -l $PACKAGE_FILENAME
+dpkg --contents $PACKAGE_FILENAME
+md5sum $PACKAGE_FILENAME

@@ -5,7 +5,7 @@ go 1.13
 replace github.com/Sirupsen/logrus v1.4.2 => github.com/sirupsen/logrus v1.4.2
 
 replace (
-	github.com/containerd/containerd => github.com/ukontainer/containerd v1.5.1-0.20210923085319-d329cc432a30
+	github.com/containerd/containerd => github.com/ukontainer/containerd v1.5.1-0.20211003041252-24895b350f69
 	github.com/containerd/containerd/api => github.com/containerd/containerd/api v0.0.0-20210908133427-99987f2a5eae
 )
 

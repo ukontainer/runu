@@ -5,11 +5,6 @@ mkdir -p /tmp/runu-root
 
 . $(dirname "${BASH_SOURCE[0]}")/common.sh
 
-# XX: Linux use env_reset in /etc/sudoers
-if [ $TRAVIS_OS_NAME = "linux" ] ; then
-    sudo ln -s `which runu` /usr/bin/runu
-fi
-
 fold_start test.0 "preparation test"
 # get script from moby
 curl https://raw.githubusercontent.com/moby/moby/7608e42da5abdd56c4d7b209384a6e512928d054/contrib/download-frozen-image-v2.sh \
@@ -45,11 +40,12 @@ fold_end test.0
 run_test()
 {
     bundle=$1
+    RUNU=`which runu`
 
-    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root run --bundle=$bundle foo
+    sudo ${RUNU} --log="$HOME/runu.log" --debug --root=/tmp/runu-root run --bundle=$bundle foo
     sleep 5
-    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root kill foo 9 || true
-    sudo runu --log="$HOME/runu.log" --debug --root=/tmp/runu-root delete foo
+    sudo ${RUNU} --log="$HOME/runu.log" --debug --root=/tmp/runu-root kill foo 9 || true
+    sudo ${RUNU} --log="$HOME/runu.log" --debug --root=/tmp/runu-root delete foo
 }
 
 # test hello-world

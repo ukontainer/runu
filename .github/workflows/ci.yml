@@ -1,0 +1,264 @@
+name: CI
+on:
+  push:
+    branches:
+      - '**'
+  release:
+    types:
+      - created
+  repository_dispatch:
+    types: [trigger-test]
+  workflow_dispatch:
+    inputs:
+      debug_enabled:
+        description: 'Run the build with tmate debugging enabled (https://github.com/marketplace/actions/debugging-with-tmate)'
+        required: false
+        default: false
+      image_version:
+        description: 'Specify docker image version to test'
+        required: false
+        default: "0.6"
+
+jobs:
+  build:
+    name: test (${{ matrix.os }}/${{ matrix.arch }})
+    runs-on: ${{ matrix.runs_on }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: linux
+            arch: amd64
+            os_alias: linux
+            arch_alias: amd64
+            runs_on: ubuntu-18.04
+            goos: linux
+          - os: macos
+            arch: amd64
+            os_alias: osx
+            arch_alias: amd64
+            goos: darwin
+            runs_on: macos-11
+          - os: linux
+            arch: arm32
+            os_alias: linux
+            arch_alias: armhf
+            goos: linux
+            goarch: arm
+            goarm: "7"
+            runs_on: ubuntu-18.04
+            cc: arm-linux-gnueabihf-gcc
+            cgo_enabled: 1
+          - os: linux
+            arch: arm64
+            os_alias: linux
+            arch_alias: arm64
+            goos: linux
+            goarch: arm64
+            runs_on: ubuntu-18.04
+            cc: aarch64-linux-gnu-gcc
+            cgo_enabled: 1
+    env:
+      TRAVIS_OS_NAME: ${{ matrix.os_alias }}
+      TRAVIS_ARCH: ${{ matrix.arch }}
+      REGISTRY: ghcr.io/
+      KIND_IMG_VERSION: v1.21.1
+      CC: ${{ matrix.cc }}
+      CGO_ENABLED: ${{ matrix.cgo_enabled }}
+      GOOS: ${{matrix.goos}}
+      GOARCH: ${{matrix.goarch}}
+      GOARM: ${{matrix.goarm}}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+    - uses: actions/setup-go@v2
+      with:
+        go-version: 1.17.1
+    - uses: actions/cache@v2
+      with:
+        # In order:
+        # * Module download cache
+        # * Build cache (Linux)
+        # * Build cache (Mac)
+        # * Build cache (Windows)
+        path: |
+          ~/go/pkg/mod
+          ~/.cache/go-build
+          ~/Library/Caches/go-build
+          %LocalAppData%\go-build
+        key: ${{ runner.os }}-${{ matrix.arch }}-ccache-build-${{ hashFiles('**/go.sum') }}
+        restore-keys: ${{ runner.os }}-${{ matrix.arch }}-ccache-build-
+
+    - name: Event Information
+      run: |
+        echo "Event '${{ github.event.action }}' from '${{ github.event.client_payload.repository }}'"
+
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - name: Set env
+      run: |
+        echo "$HOME/.local/bin:${{ github.workspace }}/bin" >> $GITHUB_PATH
+        echo "export PATH=$HOME/.local/bin:${{ github.workspace }}/bin:$PATH" >> $HOME/.bashrc
+        RELEASE_VERSION=`git describe --tags --abbrev=0 | sed "s/^v//"`
+        BUILD_VERSION=${RELEASE_VERSION}.${{ github.run_number }}
+        PACKAGE_FILENAME=docker-runu-$BUILD_VERSION-${{ matrix.arch_alias }}.deb
+        echo "RELEASE_VERSION=$RELEASE_VERSION" >> $GITHUB_ENV
+        echo "BUILD_VERSION=$BUILD_VERSION" >> $GITHUB_ENV
+        echo "PACKAGE_FILENAME=$PACKAGE_FILENAME" >> $GITHUB_ENV
+        echo "DEB_ARCH=${{ matrix.arch_alias }}" >> $GITHUB_ENV
+        # image version
+        if [ -n "${{ github.event.inputs.image_version }}" ] ; then
+          echo "DOCKER_IMG_VERSION=${{ github.event.inputs.image_version }}" >> $GITHUB_ENV
+        elif [ -n "${{ github.event.client_payload.img_version }}" ] ; then
+          # TODO: not implemented yet
+          echo "DOCKER_IMG_VERSION=${{ github.event.client_payload.img_version }}" >> $GITHUB_ENV
+        else
+          echo "DOCKER_IMG_VERSION=0.6" >> $GITHUB_ENV
+        fi
+
+    - name: package installation (linux)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: |
+        sudo apt update -y
+        sudo apt install -y bridge-utils
+
+    - name: package installation (linux-cross)
+      if: runner.os == 'linux' && ( matrix.arch == 'arm32' || matrix.arch == 'arm64')
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y crossbuild-essential-${{ matrix.arch_alias }}
+
+    - name: package installation (mac)
+      if: runner.os == 'macos'
+      run: |
+        mkdir -p ~/.local/bin
+        brew install ukontainer/lkl/containerd  || true
+        brew install ukontainer/lkl/nerdctl coreutils
+        ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
+
+    - name: Build
+      run: |
+        go install -v .
+    - name: Build shim
+      if: runner.os == 'macos'
+      run: |
+        go install -v ./cmd/containerd-shim-runu-v1
+
+    - name: goreportcard
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: |
+        cd /tmp
+        go get -u github.com/gojp/goreportcard/cmd/goreportcard-cli
+        GO111MODULE=off go get -u github.com/alecthomas/gometalinter
+        go get -u github.com/gordonklaus/ineffassign
+        go get -u github.com/fzipp/gocyclo/cmd/gocyclo
+        go get -u github.com/client9/misspell/cmd/misspell
+        go get -u golang.org/x/lint/golint
+        cd ${{ github.workspace }}
+        # Do checks
+        GO111MODULE=on goreportcard-cli -t 100.0 -v
+
+    # TODO: run qemu for arm32/arm64 tests
+    - name: Test (standalone)
+      if: matrix.arch != 'arm32' && matrix.arch != 'arm64'
+      run: bash -e ${{ github.workspace }}/test/standalone-test.sh
+    - name: Test (containerd/ctr)
+      run: bash -e ${{ github.workspace }}/test/containerd-ctr-test.sh
+    - name: Test (containerd/nerdctl)
+      run: bash -e ${{ github.workspace }}/test/containerd-nerdctl-test.sh
+    # TODO: run qemu for arm32/arm64 tests
+    - name: Test (dockerd)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: bash -e ${{ github.workspace }}/test/docker-oci-test.sh
+    - name: Test (docker more)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: bash -e ${{ github.workspace }}/test/docker-more-test.sh
+    - name: Test (docker volume)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: bash -e ${{ github.workspace }}/test/docker-volume-test.sh
+
+    - name: KinD image preparation
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: |
+        . ${{ github.workspace }}/test/common.sh
+        # prepare RUNU_AUX_DIR
+        create_runu_aux_dir
+        cp $RUNU_AUX_DIR/libc.so k8s/
+        cp $RUNU_AUX_DIR/lkick k8s/
+
+        # Build kind node docker image
+        cp `which runu` k8s/
+        cd k8s
+        docker build -t ukontainer/node-runu:$KIND_IMG_VERSION .
+        cd ..
+    - uses: engineerd/setup-kind@v0.5.0
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      with:
+          version: "v0.11.1"
+          config: "k8s/kind-cluster.yaml"
+          image: "ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}"
+
+    - name: Test (k8s)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: bash -e ${{ github.workspace }}/test/k8s-test.sh
+
+    - name: Build Debian package
+      if: runner.os == 'linux'
+      run: |
+        bash -ex pkg/pre-deploy-deb.sh
+    - name: Test Debian package
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: |
+        bash -ex pkg/pre-deploy-test-deb.sh
+
+    - name: upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+        path: ${{ env.PACKAGE_FILENAME }}
+        name: ${{ env.PACKAGE_FILENAME }}
+
+    # TODO: use appropriate debian repository instead of github release
+    - name: Release
+      if: gitHub.event_name == 'release'
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ env.RELEASE_VERSION }}
+        prerelease: true
+        files: |
+          ${{ env.PACKAGE_FILENAME }}
+
+    - name: Log in to docker.io
+      if: runner.os == 'linux'
+      uses: docker/login-action@v1.10.0
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Log in to the ghcr.io
+      if: runner.os == 'linux'
+      uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
+      with:
+        registry: ghcr.io
+        username: ${{ github.actor }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    - name: Build and push Docker image
+      if: gitHub.event_name == 'release' && runner.os == 'linux' && matrix.arch == 'amd64'
+      uses: docker/build-push-action@v2
+      with:
+        context: k8s
+        platforms: linux/amd64
+        push: true
+        tags: |
+          docker.io/ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}
+          ghcr.io/ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}
+
+    - name: Log
+      if: always()
+      run: |
+        cat /tmp/dockerd.log || true
+        cat /tmp/containerd.log || true
+
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}

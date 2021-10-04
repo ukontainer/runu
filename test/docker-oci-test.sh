@@ -12,7 +12,7 @@ fold_start test.dockerd.0 "boot dockerd"
 if [ $TRAVIS_OS_NAME = "linux" ] ; then
 
     (sudo cat /etc/docker/daemon.json 2>/dev/null || echo '{}') | \
-        jq '.runtimes."runu-dev" |= {"path":"'${TRAVIS_HOME}'/gopath/bin/'${RUNU_PATH}'runu","runtimeArgs":[]}' | \
+        jq '.runtimes."runu-dev" |= {"path":"'`which runu`'","runtimeArgs":[]}' | \
         jq '. |= .+{"experimental":true}' | \
         jq '. |= .+{"ipv6":true}' | \
         jq '. |= .+{"fixed-cidr-v6": "2001:db8::/64"}' | \
@@ -22,6 +22,7 @@ if [ $TRAVIS_OS_NAME = "linux" ] ; then
 
 elif [ $TRAVIS_OS_NAME = "osx" ] ; then
 
+    set -x
     sudo mkdir -p /etc/docker/
     git clone https://gist.github.com/aba357f73da4e14bc3f5cbeb00aeaea4.git \
 	/tmp/containerd-config-dockerd || true
@@ -56,12 +57,12 @@ fold_end test.dockerd.0 ""
 
 # test hello-world
 fold_start test.docker.0 "docker hello"
-    docker $DOCKER_RUN_ARGS ukontainer/runu-base:$DOCKER_IMG_VERSION hello
+    docker $DOCKER_RUN_ARGS ${REGISTRY}ukontainer/runu-base:$DOCKER_IMG_VERSION hello
 fold_end test.docker.0
 
 # test ping
 fold_start test.docker.1 "docker ping"
-    docker $DOCKER_RUN_ARGS ukontainer/runu-base:$DOCKER_IMG_VERSION \
+    docker $DOCKER_RUN_ARGS ${REGISTRY}ukontainer/runu-base:$DOCKER_IMG_VERSION \
            ping -c5 127.0.0.1
 fold_end test.docker.1
 
@@ -72,7 +73,7 @@ fold_start test.docker.2 "docker python"
     docker $DOCKER_RUN_ARGS -e HOME=/ \
            -e PYTHONHOME=/python -e LKL_ROOTFS=imgs/python.img \
            -e PYTHONHASHSEED=1 \
-           ukontainer/runu-base:$DOCKER_IMG_VERSION \
+           ${REGISTRY}ukontainer/runu-base:$DOCKER_IMG_VERSION \
            python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2
 
@@ -80,7 +81,7 @@ fold_end test.docker.2
 if [ $TRAVIS_OS_NAME = "linux" ] ; then
 fold_start test.docker.2.2 "docker python-slim"
     docker $DOCKER_RUN_ARGS \
-           ukontainer/runu-python:$DOCKER_IMG_VERSION-slim \
+           ${REGISTRY}ukontainer/runu-python:$DOCKER_IMG_VERSION-slim \
            python -c "print(\"hello world from python(docker-runu)\")"
 fold_end test.docker.2.2
 fi
@@ -89,7 +90,7 @@ fi
 fold_start test.docker.3 "docker nginx"
 CID=`docker $DOCKER_RUN_ARGS -d \
  -e LKL_ROOTFS=imgs/data.iso \
- ukontainer/runu-base:$DOCKER_IMG_VERSION \
+ ${REGISTRY}ukontainer/runu-base:$DOCKER_IMG_VERSION \
  nginx`
     sleep 2
     docker ps -a
@@ -100,7 +101,7 @@ fold_end test.docker.3
 fold_start test.docker.3.2 "docker nginx-slim"
 CID=`docker $DOCKER_RUN_ARGS -d \
  -e LKL_ROOTFS=imgs/data.iso \
- ukontainer/runu-nginx:$DOCKER_IMG_VERSION-slim \
+ ${REGISTRY}ukontainer/runu-nginx:$DOCKER_IMG_VERSION-slim \
  nginx`
     sleep 2
     docker ps -a
@@ -136,7 +137,7 @@ fold_start test.docker.5 "docker named"
     CID=named-docker
     docker $DOCKER_RUN_ARGS -d --name $CID \
      -e LKL_ROOTFS=imgs/named.img \
-     ukontainer/runu-base:$DOCKER_IMG_VERSION \
+     ${REGISTRY}ukontainer/runu-base:$DOCKER_IMG_VERSION \
      named -c /etc/bind/named.conf -g
 
     sleep 10

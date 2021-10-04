@@ -39,7 +39,7 @@ kubectl apply -f ./k8s/ukontainer-runtimeclass.yaml
 
 See the instruction described at https://bintray.com/ukontainer/debian.
 Alternatively, you can use a KinD (k8s in Docker) image which contains runu
-binary (https://hub.docker.com/r/thehajime/node-runu).
+binary (https://hub.docker.com/r/ukontainer/node-runu).
 
 ### Usage
 

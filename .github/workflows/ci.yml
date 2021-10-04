@@ -224,7 +224,7 @@ jobs:
       if: gitHub.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        tag_name: ${{ env.RELEASE_VERSION }}
+        tag_name: v${{ env.RELEASE_VERSION }}
         prerelease: true
         files: |
           ${{ env.PACKAGE_FILENAME }}

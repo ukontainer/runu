@@ -68,9 +68,6 @@ jobs:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
       GOARM: ${{matrix.goarm}}
-    permissions:
-      contents: read
-      packages: write
     steps:
     - uses: actions/setup-go@v2
       with:

@@ -226,6 +226,7 @@ jobs:
       with:
         tag_name: v${{ env.RELEASE_VERSION }}
         prerelease: true
+        token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           ${{ env.PACKAGE_FILENAME }}
 

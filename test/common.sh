@@ -60,8 +60,8 @@ create_runu_aux_dir() {
     fi
 
     # download pre-built frankenlibc
-    URL="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-$ARCH-$TRAVIS_OS_NAME.tar.gz"
-    URL_LINUX="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-amd64-linux.tar.gz"
+    URL="https://github.com/ukontainer/frankenlibc/releases/download/latest/frankenlibc-$ARCH-$TRAVIS_OS_NAME.tar.gz"
+    URL_LINUX="https://github.com/ukontainer/frankenlibc/releases/download/latest/frankenlibc-amd64-linux.tar.gz"
     curl -L $URL -o /tmp/frankenlibc.tar.gz
     tar xfz /tmp/frankenlibc.tar.gz -C /tmp/
     cp /tmp/opt/rump/bin/rexec $RUNU_AUX_DIR/rexec

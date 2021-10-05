@@ -23,6 +23,7 @@ jobs:
   build:
     name: test (${{ matrix.os }}/${{ matrix.arch }})
     runs-on: ${{ matrix.runs_on }}
+    timeout-minutes: 60
     strategy:
       fail-fast: false
       matrix:
@@ -72,6 +73,9 @@ jobs:
     - uses: actions/setup-go@v2
       with:
         go-version: 1.17.1
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
     - uses: actions/cache@v2
       with:
         # In order:
@@ -91,9 +95,6 @@ jobs:
       run: |
         echo "Event '${{ github.event.action }}' from '${{ github.event.client_payload.repository }}'"
 
-    - uses: actions/checkout@v2
-      with:
-        fetch-depth: 0
     - name: Set env
       run: |
         echo "$HOME/.local/bin:${{ github.workspace }}/bin" >> $GITHUB_PATH
@@ -131,8 +132,10 @@ jobs:
       if: runner.os == 'macos'
       run: |
         mkdir -p ~/.local/bin
-        brew install ukontainer/lkl/containerd  || true
-        brew install ukontainer/lkl/nerdctl coreutils
+        # use pre-installed golang instead of brew
+        ln -s `which go` /usr/local/Homebrew/Library/Homebrew/shims/mac/super/go
+        brew install ukontainer/lkl/containerd ukontainer/lkl/nerdctl --ignore-dependencies
+        brew install coreutils
         ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
     - name: Build
@@ -259,4 +262,4 @@ jobs:
 
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
-      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled }}
+      if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && always ()}}

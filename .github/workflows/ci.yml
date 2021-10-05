@@ -17,7 +17,6 @@ on:
       image_version:
         description: 'Specify docker image version to test'
         required: false
-        default: "0.6"
 
 jobs:
   build:
@@ -69,6 +68,7 @@ jobs:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
       GOARM: ${{matrix.goarm}}
+      DOCKER_IMG_VERSION_DEFAULT: 0.7
     steps:
     - uses: actions/setup-go@v2
       with:
@@ -113,7 +113,7 @@ jobs:
           # TODO: not implemented yet
           echo "DOCKER_IMG_VERSION=${{ github.event.client_payload.img_version }}" >> $GITHUB_ENV
         else
-          echo "DOCKER_IMG_VERSION=0.6" >> $GITHUB_ENV
+          echo "DOCKER_IMG_VERSION=${{ env.DOCKER_IMG_VERSION_DEFAULT }}" >> $GITHUB_ENV
         fi
 
     - name: package installation (linux)

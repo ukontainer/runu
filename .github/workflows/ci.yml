@@ -197,6 +197,7 @@ jobs:
         docker build -t ukontainer/node-runu:$KIND_IMG_VERSION .
         cd ..
     - uses: engineerd/setup-kind@v0.5.0
+      name: kind setup with default CNI
       if: runner.os == 'linux' && matrix.arch == 'amd64'
       with:
           version: "v0.11.1"
@@ -205,7 +206,32 @@ jobs:
 
     - name: Test (k8s)
       if: runner.os == 'linux' && matrix.arch == 'amd64'
-      run: bash -e ${{ github.workspace }}/test/k8s-test.sh
+      run: |
+        bash -e ${{ github.workspace }}/test/k8s-test.sh 127.0.0.1
+
+    - run: kind delete cluster
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+
+    - uses: engineerd/setup-kind@v0.5.0
+      name: kind setup with calico
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      with:
+          version: "v0.11.1"
+          config: "k8s/kind-cluster-calico.yaml"
+          image: "ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}"
+          wait: "0s"
+
+    - name: Test (k8s/calico)
+      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      run: |
+        set -x
+        NET=`kubectl cluster-info dump | grep -- --cluster-cidr | cut -d'=' -f2 | sed s/\"\,//`
+        # install calico
+        curl -s https://docs.projectcalico.org/v3.20/manifests/calico.yaml | sed "s,192.168.0.0/16,$NET," | kubectl apply -f -
+        sleep 30
+        DST=`kubectl get node -o wide | grep control-plane | awk '{print $6}'`
+        bash -e ${{ github.workspace }}/test/k8s-test.sh $DST
+
 
     - name: Build Debian package
       if: runner.os == 'linux'

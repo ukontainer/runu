@@ -486,8 +486,8 @@ github.com/tmc/grpc-websocket-proxy v0.0.0-20190109142713-0ad062ec5ee5/go.mod h1
 github.com/tmc/grpc-websocket-proxy v0.0.0-20201229170055-e5319fda7802/go.mod h1:ncp9v5uamzpCO7NfCPTXjqaC+bZgJeR0sMTm6dMHP7U=
 github.com/tv42/httpunix v0.0.0-20191220191345-2ba4b9c3382c/go.mod h1:hzIxponao9Kjc7aWznkXaL4U4TWaDSs8zcsY4Ka08nM=
 github.com/ugorji/go v1.1.4/go.mod h1:uQMGLiO92mf5W77hV/PUCpI3pbzQx3CRekS0kk+RGrc=
-github.com/ukontainer/containerd v1.5.1-0.20211003041252-24895b350f69 h1:kHVMTcXXJXV1wy7mvfMi1D1g65Fowpze4bdKHDEK9A4=
-github.com/ukontainer/containerd v1.5.1-0.20211003041252-24895b350f69/go.mod h1:DzYhywwqeczmLN8quD/PX9lYqk7ijzepXrILUYPvhXA=
+github.com/ukontainer/containerd v1.5.1-0.20211004093037-9c74b7617ea1 h1:HxOcgoip1rjTsnDrYYBRHOX0/SbzClXkDWW0h1+tazk=
+github.com/ukontainer/containerd v1.5.1-0.20211004093037-9c74b7617ea1/go.mod h1:DzYhywwqeczmLN8quD/PX9lYqk7ijzepXrILUYPvhXA=
 github.com/urfave/cli v1.22.1/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=
 github.com/urfave/cli v1.22.2 h1:gsqYFH8bb9ekPA12kRo0hfjngWQjkJPlN9R0N78BoUo=
 github.com/urfave/cli v1.22.2/go.mod h1:Gos4lmkARVdJ6EkW0WaNv/tZAAMe9V7XWyB60NtXRu0=

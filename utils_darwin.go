@@ -8,7 +8,7 @@ import (
 // /usr/lib is not writable on recent darwin
 var runuAuxFileDir = "/usr/local/lib/runu"
 
-func setupNetwork(spec *specs.Spec) (*lklIfInfo, error) {
+func setupNetwork(spec *specs.Spec) (*lklIfInfo, []lklRoute, error) {
 	logrus.Infof("no netns detected: no addr configuration, skipping")
-	return nil, nil
+	return nil, nil, nil
 }

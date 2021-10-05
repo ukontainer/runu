@@ -164,6 +164,11 @@ type lklInterface struct {
 	Offload   string `json:"offload,omitempty"`
 }
 
+type lklRoute struct {
+	Destination string `json:"destination"`
+	Nexthop     string `json:"nexthop"`
+}
+
 type lklConfig struct {
 	V4Gateway  string         `json:"gateway,omitempty"`
 	Interfaces []lklInterface `json:"interfaces,omitempty"`
@@ -171,6 +176,7 @@ type lklConfig struct {
 	DelayMain  string         `json:"delay_main,omitempty"`
 	SingleCpu  string         `json:"singlecpu,omitempty"`
 	Sysctl     string         `json:"sysctl,omitempty"`
+	Routes     string         `json:"route,omitempty"`
 }
 
 type lklIfInfo struct {
@@ -179,11 +185,11 @@ type lklIfInfo struct {
 	v4Gw    net.IP
 }
 
-func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (*lklIfInfo, error) {
-	var config lklConfig
+func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (*lklConfig, error) {
+	config := new(lklConfig)
 
 	// IPv4 address
-	ifInfo, err := setupNetwork(spec)
+	ifInfo, routeInfo, err := setupNetwork(spec)
 	if err != nil {
 		return nil, fmt.Errorf("failed to parse ipv4/ipv6 address: (%s)", err)
 	}
@@ -191,10 +197,12 @@ func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (
 	if ifInfo == nil {
 		logrus.Warnf("no interface detected")
 		*lklJsonOut = lklJson
-		return nil, nil
+		return config, nil
 	}
 
 	logrus.Debugf(ifInfo.ifAddrs[0].String())
+	logrus.Debugf("interface=>%+v", ifInfo)
+	logrus.Debugf("route=>%+v", routeInfo)
 
 	v4masklen, _ := ifInfo.ifAddrs[0].Mask.Size()
 	v4addr := ifInfo.ifAddrs[0].IP
@@ -227,9 +235,7 @@ func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (
 			}
 		}
 	} else {
-		config = lklConfig{
-			Debug: "1",
-		}
+		config.Debug = "1"
 		config.Interfaces = append(config.Interfaces,
 			lklInterface{
 				V4Addr:    v4addr.String(),
@@ -238,6 +244,12 @@ func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (
 				Iftype:    "rumpfd",
 			})
 		config.V4Gateway = v4gw.String()
+		for _, route := range routeInfo {
+			config.Routes += route.Destination
+			config.Routes += "="
+			config.Routes += route.Nexthop
+			config.Routes += ";"
+		}
 	}
 
 	outJson, err := json.MarshalIndent(config, "", "    ")
@@ -249,7 +261,7 @@ func generateLklJsonFile(lklJson string, lklJsonOut *string, spec *specs.Spec) (
 
 	ioutil.WriteFile(*lklJsonOut, outJson, os.ModePerm)
 
-	return ifInfo, nil
+	return config, nil
 }
 
 func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string, map[*os.File]bool) {
@@ -321,13 +333,13 @@ func parseEnvs(spec *specs.Spec, context *cli.Context, rootfs string) ([]string,
 	}
 	lklJsonOut := rootfs + "/" + "lkl-" + container[:clen] + "-out.json"
 
-	ifInfo, err := generateLklJsonFile(lklJson, &lklJsonOut, spec)
+	jsonObj, err := generateLklJsonFile(lklJson, &lklJsonOut, spec)
 	if err != nil {
 		panic(err)
 	}
 
 	// XXX: eth0 should be somewhere else
-	if ifInfo != nil {
+	if len(jsonObj.Interfaces) > 0 {
 		lklNet := "eth0"
 		fd, nonblock := openNetFd(lklNet, spec.Process.Env)
 		fds[fd] = nonblock

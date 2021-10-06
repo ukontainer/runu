@@ -12,7 +12,8 @@ import (
 )
 
 const (
-	addr9p = "127.0.0.1:5640"
+	addr9p    = "127.0.0.1:5640"
+	p9Timeout = 30
 )
 
 type contextKey string
@@ -43,7 +44,7 @@ func connect9pfs() (*os.File, bool) {
 }
 
 // 9pfs server side
-func start9pfsServer(path string) {
+func start9pfsServer(path string) error {
 	ctx := context.Background()
 	l, err := net.Listen("tcp", addr9p)
 	if err != nil {
@@ -52,22 +53,26 @@ func start9pfsServer(path string) {
 	defer l.Close()
 
 	for {
+		statusChan := make(chan error)
 		c, err := l.Accept()
 		if err != nil {
 			panic(err)
 		}
 
-		go func(conn net.Conn) {
+		go func(conn net.Conn) error {
 			ctx := context.WithValue(ctx, contextKey("conn"), conn)
 			session, err := ufs.NewSession(ctx, path)
 			if err != nil {
 				logrus.Println("error creating session", err)
-				return
+				statusChan <- err
 			}
 
-			if err := p9p.ServeConn(ctx, conn, p9p.Dispatch(session)); err != nil && err != io.EOF {
-				logrus.Println("error serving conn:", err)
+			if err := p9p.ServeConn(ctx, conn, p9p.Dispatch(session), p9Timeout); err != nil && err != io.EOF {
+				logrus.Printf("error serving conn: (path=%s) %+v", path, err)
+				statusChan <- err
 			}
+			return nil
 		}(c)
+		return <-statusChan
 	}
 }

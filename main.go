@@ -75,8 +75,7 @@ func main() {
 	app.Before = func(context *cli.Context) error {
 		if rootfs := context.GlobalString("9ps"); rootfs != "" {
 			logrus.Debugf("Runu called with args: %v\n", os.Args)
-			start9pfsServer(rootfs)
-			return nil
+			return start9pfsServer(rootfs)
 		}
 		if path := context.GlobalString("log"); path != "" {
 			f, err := os.OpenFile(path,

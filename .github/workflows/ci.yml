@@ -289,6 +289,14 @@ jobs:
         cat /tmp/dockerd.log || true
         cat /tmp/containerd.log || true
 
+    - run: kind export logs logs
+      if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
+    - uses: actions/upload-artifact@v1
+      if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
+      with:
+        name: KinD-log
+        path: logs
+
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && always ()}}

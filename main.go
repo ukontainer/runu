@@ -20,12 +20,17 @@ const (
 	pidFile9p   = "runu-9p.pid"
 )
 
+var (
+	version = ""
+)
+
 func main() {
 	app := cli.NewApp()
 	app.Name = "runu"
 	app.Usage = usage
 
 	var v []string
+	v = append(v, version)
 	v = append(v, fmt.Sprintf("spec: %s", specs.Version))
 	app.Version = strings.Join(v, "\n")
 

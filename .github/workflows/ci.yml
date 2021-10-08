@@ -120,6 +120,7 @@ jobs:
         else
           echo "DOCKER_IMG_VERSION=${{ env.DOCKER_IMG_VERSION_DEFAULT }}" >> $GITHUB_ENV
         fi
+        echo "GO_FLAGS=-ldflags \"-X main.version="${BUILD_VERSION}"\"" >> $GITHUB_ENV
 
     - name: package installation (linux)
       if: runner.os == 'linux' && matrix.arch == 'amd64'
@@ -145,14 +146,16 @@ jobs:
 
     - name: Build
       run: |
-        go install -v .
+        go install ${{ env.GO_FLAGS }} -v .
     - name: Build shim
       if: runner.os == 'macos'
       run: |
-        go install -v ./cmd/containerd-shim-runu-v1
+        go install ${{ env.GO_FLAGS }} -v ./cmd/containerd-shim-runu-v1
     - name: Go Test
+      if: matrix.arch == 'amd64'
       run: |
         sudo go test -v .
+        runu -v
 
     - name: goreportcard
       if: runner.os == 'linux' && matrix.arch == 'amd64'

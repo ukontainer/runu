@@ -337,3 +337,27 @@ jobs:
     - name: Setup tmate session
       uses: mxschmitt/action-tmate@v3
       if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.debug_enabled && always ()}}
+
+  build-qemu:
+    runs-on: ubuntu-18.04
+    name: Build on native aarch64
+    steps:
+    - uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    - uses: uraimo/run-on-arch-action@v2.0.5
+      id: aarch64-build-on-qemu-aarch64
+      with:
+        architecture: aarch64
+        distribution: ubuntu18.04
+        run: |
+          apt-get update
+          apt-get install -y gcc sudo curl
+          curl -L -O https://golang.org/dl/go1.17.2.linux-arm64.tar.gz
+          set -x
+          sudo mkdir -p /usr/local
+          sudo tar xfz go1.17.2.linux-arm64.tar.gz -C /usr/local
+          sudo ln -sf /usr/local/go/bin/go /usr/local/bin/
+          go install -v .
+          sudo -E go test -v .
+          runu version

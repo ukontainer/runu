@@ -7,8 +7,8 @@ if [ $TRAVIS_OS_NAME != "osx" ] ; then
     exit 0
 fi
 
-CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock --snapshotter=darwin"
-NERDCTL_ARGS="--rm --env RUMP_VERBOSE=1"
+CTR_GLOBAL_OPT="--debug -a /tmp/ctrd/run/containerd/containerd.sock --snapshotter=sparsebundle"
+NERDCTL_ARGS="--rm --env RUMP_VERBOSE=1 --net=none"
 
 
 ###
@@ -58,5 +58,6 @@ create_runu_aux_dir
 fold_start test.nerdctl.5 "test alpine Linux on darwin (nerdctl)"
     sudo nerdctl $CTR_GLOBAL_OPT run $NERDCTL_ARGS \
         --env RUNU_AUX_DIR=$RUNU_AUX_DIR --env LKL_USE_9PFS=1 \
+        --platform=linux/amd64 \
         library/alpine:latest /bin/busybox ls -l
 fold_end test.nerdctl.5

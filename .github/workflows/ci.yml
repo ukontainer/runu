@@ -140,7 +140,7 @@ jobs:
         mkdir -p ~/.local/bin
         # use pre-installed golang instead of brew
         ln -s `which go` /usr/local/Homebrew/Library/Homebrew/shims/mac/super/go
-        brew install ukontainer/lkl/containerd ukontainer/lkl/nerdctl --ignore-dependencies
+        brew install ukontainer/lkl/darwin-snapshotter ukontainer/lkl/containerd ukontainer/lkl/nerdctl --ignore-dependencies
         brew install coreutils
         ln -sf /usr/local/bin/gsha256sum ~/.local/bin/sha256sum
 
@@ -328,6 +328,7 @@ jobs:
       run: |
         cat /tmp/dockerd.log || true
         cat /tmp/containerd.log || true
+        cat /tmp/darwin-snapshotter.log || true
 
     - run: kind export logs logs
       if: runner.os == 'linux' && matrix.arch == 'amd64' && always()

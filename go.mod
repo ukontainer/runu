@@ -2,6 +2,8 @@ module github.com/ukontainer/runu
 
 go 1.16
 
+replace github.com/containerd/containerd => github.com/ukontainer/containerd v1.5.1-0.20220121000121-190b8b350994
+
 replace github.com/docker/go-p9p => github.com/ukontainer/go-p9p v0.0.0-20211006131049-f1e80d0d54ed
 
 require (

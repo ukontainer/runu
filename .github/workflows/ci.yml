@@ -269,7 +269,7 @@ jobs:
       with:
         tag_name: v${{ env.RELEASE_VERSION }}
         prerelease: true
-        token: ${{ secrets.GITHUB_TOKEN }}
+        token: ${{ secrets.PAT }}
         files: |
           ${{ env.PACKAGE_FILENAME }}
     - uses: actions/setup-ruby@v1
@@ -311,7 +311,7 @@ jobs:
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.GITHUB_TOKEN }}
+        password: ${{ secrets.PAT }}
     - name: Build and push Docker image
       if: gitHub.event_name == 'release' && runner.os == 'linux' && matrix.arch == 'amd64'
       uses: docker/build-push-action@v2

@@ -24,8 +24,8 @@ GOPATH=`go env GOPATH`
 
 if [ -f $GOPATH/bin/runu ] ; then
   cp $GOPATH/bin/runu pkg/deb/usr/bin/
-elif [ -f $GOPATH/bin/$GOOS_$GOARCH/runu ] ; then
-  cp $GOPATH/bin/$GOOS_$GOARCH/runu pkg/deb/usr/bin/
+elif [ -f $GOPATH/bin/${GOOS}_${GOARCH}/runu ] ; then
+  cp $GOPATH/bin/${GOOS}_${GOARCH}/runu pkg/deb/usr/bin/
 fi
 
 dpkg-deb --build pkg/deb

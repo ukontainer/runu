@@ -3,7 +3,7 @@
 . $(dirname "${BASH_SOURCE[0]}")/../test/common.sh
 
 # Prepare supplement files for runu
-URL="https://github.com/ukontainer/frankenlibc/releases/download/dev/frankenlibc-$ARCH-$TRAVIS_OS_NAME.tar.gz"
+URL="https://github.com/ukontainer/frankenlibc/releases/download/latest/frankenlibc-${TRAVIS_ARCH}-${TRAVIS_OS_NAME}.tar.gz"
 curl -L $URL -o /tmp/frankenlibc.tar.gz
 tar xfz /tmp/frankenlibc.tar.gz -C /tmp/
 

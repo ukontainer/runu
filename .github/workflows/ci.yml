@@ -70,10 +70,10 @@ jobs:
       GOARM: ${{matrix.goarm}}
       DOCKER_IMG_VERSION_DEFAULT: 0.7
     steps:
-    - uses: actions/setup-go@v2
+    - uses: actions/setup-go@v3
       with:
         go-version: 1.17.1
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
       with:
         fetch-depth: 0
     - uses: actions/cache@v3
@@ -257,7 +257,7 @@ jobs:
 
     - name: upload artifact
       if: runner.os == 'linux'
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
         path: ${{ env.PACKAGE_FILENAME }}
         name: ${{ env.PACKAGE_FILENAME }}
@@ -332,7 +332,7 @@ jobs:
 
     - run: kind export logs logs
       if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
-    - uses: actions/upload-artifact@v1
+    - uses: actions/upload-artifact@v3
       if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
       with:
         name: KinD-log

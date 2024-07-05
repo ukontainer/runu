@@ -64,6 +64,10 @@ func main() {
 			Usage: "start 9pfs server",
 			Value: "",
 		},
+		cli.BoolFlag{
+			Name:  "systemd-cgroup",
+			Usage: "unsupported flag",
+		},
 	}
 	app.Commands = []cli.Command{
 		createCommand,

@@ -158,7 +158,7 @@ jobs:
         runu -v
 
     - name: goreportcard
-      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      if: runner.os == 'linux' && matrix.arch == 'amd64' && matrix.runs_on == 'ubuntu-18.04'
       run: |
         cd /tmp
         go get -u github.com/gojp/goreportcard/cmd/goreportcard-cli

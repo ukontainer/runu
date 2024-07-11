@@ -20,7 +20,7 @@ on:
 
 jobs:
   build:
-    name: test (${{ matrix.os }}/${{ matrix.arch }})
+    name: test (${{ matrix.os }}/${{ matrix.arch }}/${{ matrix.runs_on }})
     runs-on: ${{ matrix.runs_on }}
     timeout-minutes: 60
     strategy:
@@ -31,14 +31,14 @@ jobs:
             arch: amd64
             os_alias: linux
             arch_alias: amd64
-            runs_on: ubuntu-18.04
+            runs_on: ubuntu-24.04
             goos: linux
           - os: macos
             arch: amd64
             os_alias: osx
             arch_alias: amd64
             goos: darwin
-            runs_on: macos-11
+            runs_on: macos-12
           - os: linux
             arch: arm32
             os_alias: linux
@@ -46,7 +46,7 @@ jobs:
             goos: linux
             goarch: arm
             goarm: "7"
-            runs_on: ubuntu-18.04
+            runs_on: ubuntu-24.04
             cc: arm-linux-gnueabihf-gcc
             cgo_enabled: 1
           - os: linux
@@ -55,7 +55,7 @@ jobs:
             arch_alias: arm64
             goos: linux
             goarch: arm64
-            runs_on: ubuntu-18.04
+            runs_on: ubuntu-24.04
             cc: aarch64-linux-gnu-gcc
             cgo_enabled: 1
     env:
@@ -70,13 +70,13 @@ jobs:
       GOARM: ${{matrix.goarm}}
       DOCKER_IMG_VERSION_DEFAULT: 0.7
     steps:
-    - uses: actions/setup-go@v3
+    - uses: actions/setup-go@v5
       with:
         go-version: 1.17.1
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       with:
         fetch-depth: 0
-    - uses: actions/cache@v3
+    - uses: actions/cache@v4
       with:
         # In order:
         # * Module download cache
@@ -257,7 +257,7 @@ jobs:
 
     - name: upload artifact
       if: runner.os == 'linux'
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         path: ${{ env.PACKAGE_FILENAME }}
         name: ${{ env.PACKAGE_FILENAME }}
@@ -269,7 +269,7 @@ jobs:
       with:
         tag_name: v${{ env.RELEASE_VERSION }}
         prerelease: true
-        token: ${{ secrets.PAT }}
+        token: ${{ secrets.GITHUB_TOKEN }}
         files: |
           ${{ env.PACKAGE_FILENAME }}
     - uses: ruby/setup-ruby@v1
@@ -301,17 +301,17 @@ jobs:
 
     - name: Log in to docker.io
       if: runner.os == 'linux'
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3.2.0
       with:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
     - name: Log in to the ghcr.io
       if: runner.os == 'linux'
-      uses: docker/login-action@v2
+      uses: docker/login-action@v3.2.0
       with:
         registry: ghcr.io
         username: ${{ github.actor }}
-        password: ${{ secrets.PAT }}
+        password: ${{ secrets.GITHUB_TOKEN }}
     - name: Build and push Docker image
       if: gitHub.event_name == 'release' && runner.os == 'linux' && matrix.arch == 'amd64'
       uses: docker/build-push-action@v2
@@ -332,7 +332,7 @@ jobs:
 
     - run: kind export logs logs
       if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
-    - uses: actions/upload-artifact@v3
+    - uses: actions/upload-artifact@v4
       if: runner.os == 'linux' && matrix.arch == 'amd64' && always()
       with:
         name: KinD-log

@@ -68,7 +68,7 @@ jobs:
       GOOS: ${{matrix.goos}}
       GOARCH: ${{matrix.goarch}}
       GOARM: ${{matrix.goarm}}
-      DOCKER_IMG_VERSION_DEFAULT: 0.7
+      DOCKER_IMG_VERSION_DEFAULT: 0.8
     steps:
     - uses: actions/setup-go@v5
       with:

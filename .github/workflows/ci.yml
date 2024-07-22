@@ -290,7 +290,7 @@ jobs:
         PACKAGECLOUD_TOKEN: ${{ secrets.PACKAGECLOUD_TOKEN }}
         DISTRO_LIST: "ubuntu/focal ubuntu/jammy ubuntu/noble"
     - name: Test Released Debian package
-      if: runner.os == 'linux' && matrix.arch == 'amd64'
+      if: runner.os == 'linux' && matrix.arch == 'amd64' && gitHub.event_name == 'release'
       run: |
         sudo apt-get remove docker-runu
         #set -x

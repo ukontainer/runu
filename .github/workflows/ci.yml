@@ -6,6 +6,7 @@ on:
   release:
     types:
       - created
+      - edited
   repository_dispatch:
     types: [trigger-test]
   workflow_dispatch:

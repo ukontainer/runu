@@ -275,7 +275,7 @@ jobs:
           ${{ env.PACKAGE_FILENAME }}
     - uses: ruby/setup-ruby@v1
       with:
-        ruby-version: 2.5
+        ruby-version: 2.7
     - name: Release to packagecloud.io
       if: runner.os == 'linux' && gitHub.event_name == 'release'
       run: |

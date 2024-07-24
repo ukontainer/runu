@@ -25,7 +25,7 @@ cat k8s/hello-world.yaml | sed "s/\$DOCKER_IMG_VERSION/$DOCKER_IMG_VERSION/" \
     | kubectl apply -f -
 
 kubectl get nodes -o wide -A
-sleep 60
+sleep 30
 set -x
 kubectl get pods -o wide -A
 kubectl describe deployment/helloworld-runu

@@ -63,7 +63,8 @@ jobs:
       TRAVIS_OS_NAME: ${{ matrix.os_alias }}
       TRAVIS_ARCH: ${{ matrix.arch }}
       REGISTRY: ghcr.io/
-      KIND_IMG_VERSION: v1.21.1
+      KIND_IMG_VERSION: v1.27.0
+      KIND_VERSION: v0.19.0
       CC: ${{ matrix.cc }}
       CGO_ENABLED: ${{ matrix.cgo_enabled }}
       GOOS: ${{matrix.goos}}
@@ -210,7 +211,7 @@ jobs:
       name: kind setup with default CNI
       if: runner.os == 'linux' && matrix.arch == 'amd64'
       with:
-          version: "v0.11.1"
+          version: "${{ env.KIND_VERSION }}"
           config: "k8s/kind-cluster.yaml"
           image: "ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}"
 
@@ -226,7 +227,7 @@ jobs:
       name: kind setup with calico
       if: runner.os == 'linux' && matrix.arch == 'amd64'
       with:
-          version: "v0.11.1"
+          version: "${{ env.KIND_VERSION }}"
           config: "k8s/kind-cluster-calico.yaml"
           image: "ukontainer/node-runu:${{ env.KIND_IMG_VERSION }}"
           wait: "0s"

@@ -238,7 +238,7 @@ jobs:
         set -x
         NET=`kubectl cluster-info dump | grep -- --cluster-cidr | cut -d'=' -f2 | sed s/\"\,//`
         # install calico
-        curl -s https://docs.projectcalico.org/v3.20/manifests/calico.yaml | sed "s,192.168.0.0/16,$NET," | kubectl apply -f -
+        curl -s https://raw.githubusercontent.com/projectcalico/calico/v3.28.0/manifests/calico.yaml | sed "s,192.168.0.0/16,$NET," | kubectl apply -f -
         sleep 30
         DST=`kubectl get node -o wide | grep control-plane | awk '{print $6}'`
         bash -e ${{ github.workspace }}/test/k8s-test.sh $DST

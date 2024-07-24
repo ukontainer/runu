@@ -25,7 +25,7 @@ cat k8s/hello-world.yaml | sed "s/\$DOCKER_IMG_VERSION/$DOCKER_IMG_VERSION/" \
     | kubectl apply -f -
 
 kubectl get nodes -o wide -A
-sleep 30
+sleep 20
 set -x
 kubectl get pods -o wide -A
 kubectl describe deployment/helloworld-runu
@@ -33,3 +33,18 @@ kubectl logs deployment/helloworld-runu |& tee /tmp/log.txt
 grep "icmp_req=1" /tmp/log.txt
 
 fold_end k8s.test.3 ""
+
+fold_start k8s.test.4 "k8s: alpine hello world"
+# install runu pod
+cat k8s/alpine-runu.yaml | sed "s/8.8.8.8/$DST_ADDR/" \
+    | kubectl apply -f -
+
+kubectl get nodes -o wide -A
+sleep 20
+set -x
+kubectl get pods -o wide -A
+kubectl describe deployment/alpine-runu
+kubectl logs deployment/alpine-runu |& tee /tmp/log.txt
+grep "seq=1" /tmp/log.txt
+
+fold_end k8s.test.4 ""

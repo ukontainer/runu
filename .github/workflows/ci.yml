@@ -208,6 +208,7 @@ jobs:
 
         # Build kind node docker image
         cp `which runu` k8s/
+        cp `which containerd-shim-runu-v2` k8s/
         cd k8s
         docker build -t ukontainer/node-runu:$KIND_IMG_VERSION .
         cd ..

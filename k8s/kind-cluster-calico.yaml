@@ -5,5 +5,4 @@ networking:
 containerdConfigPatches:
 - |-
   [plugins."io.containerd.grpc.v1.cri".containerd.runtimes.runu]
-    runtime_type = "io.containerd.runtime.v1.linux"
-    runtime_engine = "/usr/bin/runu"
+    runtime_type = "io.containerd.runu.v2"

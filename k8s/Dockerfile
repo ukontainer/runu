@@ -4,3 +4,4 @@ FROM kindest/node:v1.27.0
 COPY ./runu /usr/bin/runu
 COPY ./libc.so /usr/lib/runu/
 COPY ./lkick /usr/lib/runu/
+COPY ./containerd-shim-runu-v2 /usr/local/bin/containerd-shim-runu-v2

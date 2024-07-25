@@ -154,6 +154,10 @@ jobs:
       if: runner.os == 'macos'
       run: |
         go install ${{ env.GO_FLAGS }} -v ./cmd/containerd-shim-runu-v1
+    - name: Build v2 shim
+      if: runner.os == 'linux'
+      run: |
+        go install ${{ env.GO_FLAGS }} -v ./cmd/containerd-shim-runu-v2
     - name: Go Test
       if: matrix.arch == 'amd64'
       run: |

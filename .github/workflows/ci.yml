@@ -63,8 +63,8 @@ jobs:
       TRAVIS_OS_NAME: ${{ matrix.os_alias }}
       TRAVIS_ARCH: ${{ matrix.arch }}
       REGISTRY: ghcr.io/
-      KIND_IMG_VERSION: v1.27.0
-      KIND_VERSION: v0.19.0
+      KIND_IMG_VERSION: v1.30.0
+      KIND_VERSION: v0.23.0
       CC: ${{ matrix.cc }}
       CGO_ENABLED: ${{ matrix.cgo_enabled }}
       GOOS: ${{matrix.goos}}

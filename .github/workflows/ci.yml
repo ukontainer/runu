@@ -32,14 +32,14 @@ jobs:
             arch: amd64
             os_alias: linux
             arch_alias: amd64
-            runs_on: ubuntu-20.04
+            runs_on: ubuntu-22.04
             goos: linux
           - os: macos
             arch: amd64
             os_alias: osx
             arch_alias: amd64
             goos: darwin
-            runs_on: macos-12
+            runs_on: macos-15-intel
           - os: linux
             arch: arm32
             os_alias: linux
@@ -47,7 +47,7 @@ jobs:
             goos: linux
             goarch: arm
             goarm: "7"
-            runs_on: ubuntu-20.04
+            runs_on: ubuntu-22.04
             cc: arm-linux-gnueabihf-gcc
             cgo_enabled: 1
           - os: linux
@@ -56,7 +56,7 @@ jobs:
             arch_alias: arm64
             goos: linux
             goarch: arm64
-            runs_on: ubuntu-20.04
+            runs_on: ubuntu-22.04
             cc: aarch64-linux-gnu-gcc
             cgo_enabled: 1
     env:
